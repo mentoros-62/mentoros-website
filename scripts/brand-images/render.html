@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>MentorOS brand image renderer</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Space+Grotesk:wght@500;600&display=swap" rel="stylesheet" />
+<style>
+  body { font-family: Inter, system-ui, sans-serif; background: #eee; margin: 16px; }
+  canvas { display: block; margin-bottom: 12px; box-shadow: 0 2px 12px rgba(0,0,0,.15); max-width: 100%; }
+</style>
+</head>
+<body>
+<p id="status">Rendering…</p>
+<canvas id="og" width="1200" height="630"></canvas>
+<script>
+const W = 1200, H = 630;
+
+async function save(name, canvas) {
+  const res = await fetch(`/save?name=${name}`, { method: "POST", body: canvas.toDataURL("image/png") });
+  if (!res.ok) throw new Error(`save failed: ${name}`);
+}
+
+function loadImage(src) {
+  return new Promise((ok, fail) => { const i = new Image(); i.onload = () => ok(i); i.onerror = fail; i.src = src; });
+}
+
+function drawUniverse(ctx, cx, cy, s) {
+  const nodes = [
+    { x: -150, y: -130, c: "#3d5afe", label: "Maths" },
+    { x: 155, y: -140, c: "#6d5dfc", label: "Physics" },
+    { x: 165, y: 140, c: "#0fa39a", label: "Chemistry" },
+    { x: -160, y: 130, c: "#d48a12", label: "Logic" },
+  ];
+  const leaves = [
+    [-250, -40, 0], [-50, -235, 0], [70, -245, 1], [260, -30, 1],
+    [265, 90, 2], [60, 250, 2], [-90, 250, 3], [-260, 60, 3],
+  ];
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.scale(s, s);
+  // halo
+  const halo = ctx.createRadialGradient(0, 0, 0, 0, 0, 220);
+  halo.addColorStop(0, "rgba(109,93,252,0.32)");
+  halo.addColorStop(0.6, "rgba(61,90,254,0.07)");
+  halo.addColorStop(1, "rgba(61,90,254,0)");
+  ctx.fillStyle = halo;
+  ctx.beginPath(); ctx.arc(0, 0, 220, 0, Math.PI * 2); ctx.fill();
+  // orbits
+  ctx.strokeStyle = "rgba(10,16,48,0.08)"; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.arc(0, 0, 196, 0, Math.PI * 2); ctx.stroke();
+  // links
+  ctx.lineCap = "round";
+  nodes.forEach((n, i) => {
+    ctx.strokeStyle = i < 2 ? n.c : "rgba(28,38,96,0.3)";
+    ctx.lineWidth = i < 2 ? 3 : 2;
+    ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(n.x, n.y); ctx.stroke();
+  });
+  leaves.forEach(([x, y, k]) => {
+    const n = nodes[k];
+    ctx.strokeStyle = k < 2 ? n.c : "rgba(28,38,96,0.25)"; ctx.lineWidth = k < 2 ? 2.4 : 1.8;
+    ctx.beginPath(); ctx.moveTo(n.x, n.y); ctx.lineTo(x, y); ctx.stroke();
+  });
+  // a cross-link between maths and physics concepts
+  ctx.strokeStyle = "#6d5dfc"; ctx.lineWidth = 2.4; ctx.setLineDash([6, 8]);
+  ctx.beginPath(); ctx.moveTo(-50, -235); ctx.quadraticCurveTo(10, -290, 70, -245); ctx.stroke();
+  ctx.setLineDash([]);
+  leaves.forEach(([x, y, k]) => {
+    ctx.fillStyle = k < 2 ? nodes[k].c : "#ffffff"; ctx.strokeStyle = nodes[k].c; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.arc(x, y, 8, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  });
+  nodes.forEach((n) => {
+    ctx.fillStyle = "#fff"; ctx.strokeStyle = n.c; ctx.lineWidth = 3.5;
+    ctx.beginPath(); ctx.arc(n.x, n.y, 26, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = n.c; ctx.beginPath(); ctx.arc(n.x, n.y, 9, 0, Math.PI * 2); ctx.fill();
+  });
+  // orb
+  const orb = ctx.createRadialGradient(-18, -20, 4, 0, 0, 62);
+  orb.addColorStop(0, "#ffffff"); orb.addColorStop(0.25, "#c9c2ff"); orb.addColorStop(0.62, "#6d5dfc"); orb.addColorStop(1, "#24248f");
+  ctx.fillStyle = "rgba(109,93,252,0.16)"; ctx.beginPath(); ctx.arc(0, 0, 76, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = orb; ctx.beginPath(); ctx.arc(0, 0, 56, 0, Math.PI * 2); ctx.fill();
+  ctx.restore();
+}
+
+async function renderOg(mark) {
+  const c = document.getElementById("og");
+  const ctx = c.getContext("2d");
+  ctx.fillStyle = "#f7f7f3"; ctx.fillRect(0, 0, W, H);
+  const glow = ctx.createRadialGradient(900, 300, 0, 900, 300, 520);
+  glow.addColorStop(0, "rgba(109,93,252,0.14)"); glow.addColorStop(1, "rgba(109,93,252,0)");
+  ctx.fillStyle = glow; ctx.fillRect(0, 0, W, H);
+
+  drawUniverse(ctx, 905, 330, 0.92);
+
+  ctx.drawImage(mark, 72, 64, 52, 52);
+  ctx.fillStyle = "#0a1030"; ctx.font = "600 34px 'Space Grotesk'"; ctx.textBaseline = "middle";
+  ctx.fillText("MentorOS", 138, 91);
+
+  ctx.textBaseline = "alphabetic";
+  ctx.font = "600 66px 'Space Grotesk'";
+  ctx.fillStyle = "#0a1030";
+  ["Every mind learns", "differently."].forEach((t, i) => ctx.fillText(t, 72, 250 + i * 74));
+  const g = ctx.createLinearGradient(72, 0, 620, 0);
+  g.addColorStop(0, "#3d5afe"); g.addColorStop(0.55, "#6d5dfc"); g.addColorStop(1, "#0fa39a");
+  ctx.fillStyle = g;
+  ["Your mentor", "should too."].forEach((t, i) => ctx.fillText(t, 72, 398 + i * 74));
+
+  ctx.fillStyle = "#5d6580"; ctx.font = "500 24px Inter";
+  ctx.fillText("A personal AI learning companion · in development", 72, 560);
+  await save("og-image.png", c);
+}
+
+async function renderIcon(mark, size, name) {
+  const c = document.createElement("canvas");
+  c.width = c.height = size;
+  const ctx = c.getContext("2d");
+  if (size >= 120) {
+    // iOS masks the corners itself: fill edge to edge with the brand gradient.
+    const g = ctx.createLinearGradient(0, 0, size, size);
+    g.addColorStop(0, "#3d5afe"); g.addColorStop(0.6, "#6d5dfc"); g.addColorStop(1, "#8b7bff");
+    ctx.fillStyle = g; ctx.fillRect(0, 0, size, size);
+  }
+  ctx.drawImage(mark, 0, 0, size, size);
+  document.body.appendChild(c);
+  await save(name, c);
+}
+
+(async () => {
+  try {
+    await document.fonts.load("600 66px 'Space Grotesk'");
+    await document.fonts.load("500 24px Inter");
+    const mark = await loadImage("/favicon.svg");
+    await renderOg(mark);
+    await renderIcon(mark, 180, "apple-touch-icon.png");
+    await renderIcon(mark, 32, "favicon-32.png");
+    document.getElementById("status").textContent = "Saved";
+  } catch (e) {
+    document.getElementById("status").textContent = "Failed: " + e.message;
+  }
+})();
+</script>
+</body>
+</html>

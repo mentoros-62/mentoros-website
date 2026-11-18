@@ -1,0 +1,67 @@
+# Builds the site and deploys it to GitHub Pages.
+# One-time setup: Settings → Pages → Build and deployment → Source: "GitHub Actions".
+# Optional repository variables (Settings → Secrets and variables → Actions → Variables):
+#   SITE_BASE_PATH            Base path. Default: /<repo-name>/  (use "/" on a custom domain)
+#   SITE_URL                  Absolute public URL, for canonical + Open Graph tags
+#   SITE_CNAME                Custom domain (e.g. mentoros.ai). Leave unset until you own and configure it
+#   SITE_CONTACT_EMAIL        Address used by mailto: CTAs
+#   SITE_PILOT_FORM_URL       Form for "Become a Pilot Partner" (falls back to email)
+#   SITE_EARLY_ACCESS_FORM_URL Form for "Join the Early Access List" (falls back to email)
+name: Deploy website
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - id: pages
+        uses: actions/configure-pages@v5
+
+      - run: npm ci
+
+      - name: Build
+        env:
+          BASE_PATH: ${{ vars.SITE_BASE_PATH || (vars.SITE_CNAME && '/') || format('/{0}/', github.event.repository.name) }}
+          VITE_SITE_URL: ${{ vars.SITE_URL || (vars.SITE_CNAME && format('https://{0}/', vars.SITE_CNAME)) || format('{0}/', steps.pages.outputs.base_url) }}
+          VITE_CONTACT_EMAIL: ${{ vars.SITE_CONTACT_EMAIL }}
+          VITE_PILOT_FORM_URL: ${{ vars.SITE_PILOT_FORM_URL }}
+          VITE_EARLY_ACCESS_FORM_URL: ${{ vars.SITE_EARLY_ACCESS_FORM_URL }}
+        run: npm run build
+
+      - name: Add CNAME (only when SITE_CNAME is set)
+        if: ${{ vars.SITE_CNAME != '' }}
+        run: echo "${{ vars.SITE_CNAME }}" > dist/CNAME
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
