@@ -3,6 +3,7 @@ import { Nav } from "./components/Nav";
 import { Hero } from "./sections/Hero";
 import { Problem } from "./sections/Problem";
 import { Mentor } from "./sections/Mentor";
+import { RevisionStory } from "./sections/RevisionStory";
 import { HowItWorks } from "./sections/HowItWorks";
 import { ConceptGraph } from "./sections/ConceptGraph";
 import { Growth } from "./sections/Growth";
@@ -26,6 +27,7 @@ export default function App() {
         <Hero />
         <Problem />
         <Mentor />
+        <RevisionStory />
         <HowItWorks />
         <ConceptGraph />
         <Growth />

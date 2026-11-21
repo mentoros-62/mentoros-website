@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MentorOS Revision Story</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+/* VOICE everyday learning story, told like a teacher sketching on a notebook page
+   IDEA a ruled Indian school notebook where the story is drawn line by line in pen
+   PICTURE one 16:9 notebook stage with nine animated line-drawing scenes, two acts
+   COLOUR white ruled paper, blue-black pen ink, red pen for trouble, amber for the root, green for mastery
+   TYPE Kalam (handwriting) on the page, Inter for controls and script
+   LAYOUT modest title, stage full width, slim scene bar, then caption, comparison and voice-over script; stacks on phone */
+:root{color-scheme:light dark;--bg:light-dark(#eef1f6,#0d1017);--paper:light-dark(#ffffff,#161b26);--rule:light-dark(#cfe0f5,#243149);--margin:light-dark(#f2b8b8,#5a2b33);--ink:light-dark(#18233f,#e4e9f7);--mute:light-dark(#5b6580,#9aa5c0);--red:light-dark(#d32f2f,#ff6b6b);--redsoft:light-dark(#fdeaea,#3a1d22);--green:light-dark(#1d8f4e,#4cd98a);--greensoft:light-dark(#e3f5ea,#163527);--amber:light-dark(#e69500,#ffc04d);--ambersoft:light-dark(#fff2d6,#3d3016);--c1:light-dark(#2b59c3,#7ea2ff);--c2:light-dark(#8a3fb8,#d29bff);--c3:light-dark(#0f7c86,#4fd3de);--line:light-dark(#d9dfeb,#2a3346)}
+:root[data-theme=light]{color-scheme:light}
+:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.55 Inter,system-ui,sans-serif;overflow-x:clip}
+.nav-back{max-width:1240px;margin:16px auto 0;padding:0 max(4vw,16px);display:flex;align-items:center;justify-content:space-between}
+.nav-back a{display:inline-flex;align-items:center;gap:6px;color:var(--mute);text-decoration:none;font-weight:600;font-size:14px;padding:8px 12px;border-radius:8px;background:var(--paper);border:1px solid var(--line)}
+.nav-back a:hover{color:var(--ink);border-color:var(--c1)}
+.wrap{max-width:1240px;margin:0 auto;padding:clamp(16px,2.5vw,32px) max(4vw,16px) 48px}
+h1{font:700 clamp(30px,4vw,44px)/1.05 Inter,system-ui,sans-serif;letter-spacing:-.02em;margin:0 0 6px;text-wrap:balance}
+.lede{margin:0 0 18px;color:var(--mute);max-width:70ch}
+.stage{position:relative;background:var(--paper);border-radius:14px;box-shadow:0 1px 0 var(--line),0 10px 30px -18px rgba(0,0,0,.35);overflow:hidden;aspect-ratio:16/9}
+.stage svg{position:absolute;inset:0;width:100%;height:100%;display:block}
+.hand{font-family:Kalam,'Comic Sans MS',cursive}
+svg text{font-family:Kalam,'Comic Sans MS',cursive;fill:var(--ink)}
+.bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px}
+button{font:600 15px Inter,system-ui,sans-serif;color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:10px;min-height:44px;padding:0 16px;cursor:pointer}
+button:hover{border-color:var(--c1)}
+button:focus-visible{outline:3px solid var(--c1);outline-offset:2px}
+button.primary{background:var(--ink);color:var(--paper);border-color:var(--ink);min-width:104px}
+.segs{flex:1 1 320px;display:flex;gap:4px;min-height:44px;align-items:center}
+.seg{flex:1;height:44px;padding:0;border:0;background:none;border-radius:0;display:flex;align-items:center;min-width:0}
+.seg i{display:block;height:8px;width:100%;border-radius:4px;background:var(--line);overflow:hidden;position:relative}
+.seg i b{position:absolute;inset:0 auto 0 0;width:0;background:var(--c1)}
+.seg.a2 i b{background:var(--green)}
+.seg:focus-visible{outline:3px solid var(--c1)}
+.cap{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 14px;align-items:baseline;margin-top:14px;padding:14px 18px;background:var(--paper);border-radius:12px;border:1px solid var(--line)}
+.cap .k{font-weight:700;font-size:14px;color:var(--mute);white-space:nowrap}
+.cap .k.act2{color:var(--green)}
+.cap p{margin:0;font-size:17px}
+h2{font:700 24px/1.2 Inter,system-ui,sans-serif;margin:36px 0 12px;letter-spacing:-.01em}
+.cmp{width:100%;border-collapse:collapse;background:var(--paper);border-radius:12px;overflow:hidden}
+.cmp th,.cmp td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+.cmp th{font-size:14px;color:var(--mute)}
+.cmp td:nth-child(2){color:var(--red)}
+.cmp td:nth-child(3){color:var(--green);font-weight:600}
+.note{font-size:13px;color:var(--mute);margin:8px 0 0}
+.script{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.script li button{width:100%;text-align:left;display:grid;grid-template-columns:2.2em minmax(0,11em) minmax(0,1fr);gap:12px;padding:12px 14px;font-weight:400;line-height:1.45;height:auto}
+.script li button b{font-weight:700}
+.script li button.on{border-color:var(--ink);box-shadow:inset 4px 0 0 var(--c1)}
+.script li.a2 button.on{box-shadow:inset 4px 0 0 var(--green)}
+.script .n{color:var(--mute);font-variant-numeric:tabular-nums}
+@media(max-width:600px){.script li button{grid-template-columns:2em minmax(0,1fr)}.script li button span:last-child{grid-column:2}.cap{grid-template-columns:1fr}.cmp{font-size:14px}.cmp th,.cmp td{padding:8px}}
+/* animation primitives */
+.d{stroke-dasharray:1;stroke-dashoffset:1;animation:draw var(--t,.8s) ease-out forwards var(--d,0s)}
+.f{opacity:0;animation:fade var(--t,.5s) ease forwards var(--d,0s)}
+.p{opacity:0;transform-box:fill-box;transform-origin:center;animation:pop .45s cubic-bezier(.3,1.6,.5,1) forwards var(--d,0s)}
+.wr{clip-path:inset(0 100% 0 0);animation:write var(--t,.9s) linear forwards var(--d,0s)}
+.walk{animation:walk 1.8s ease-out both var(--d,0s)}
+.pulse{transform-box:fill-box;transform-origin:center;animation:pulse 1.4s ease-in-out infinite var(--d,0s)}
+.shake{transform-box:fill-box;transform-origin:50% 100%;animation:shake .5s ease-in-out infinite var(--d,0s)}
+.wave{transform-box:fill-box;transform-origin:center;animation:wave .7s ease-in-out infinite alternate var(--d,0s)}
+.paused *{animation-play-state:paused!important}
+@keyframes draw{to{stroke-dashoffset:0}}
+@keyframes fade{to{opacity:1}}
+@keyframes pop{0%{opacity:0;transform:scale(.3)}100%{opacity:1;transform:scale(1)}}
+@keyframes write{to{clip-path:inset(0 0 0 0)}}
+@keyframes walk{0%{transform:translateX(-520px)}100%{transform:translateX(0)}}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+@keyframes shake{0%,100%{transform:rotate(0)}25%{transform:rotate(-2.5deg)}75%{transform:rotate(2.5deg)}}
+@keyframes wave{from{transform:scaleY(.35)}to{transform:scaleY(1)}}
+@media (prefers-reduced-motion:reduce){.d,.f,.p,.wr,.walk{animation-duration:.01s!important;animation-delay:0s!important}.pulse,.shake,.wave{animation:none!important}}
+</style>
+</head>
+<body>
+<div class="nav-back">
+  <a href="./">← Back to MentorOS Home</a>
+  <span style="font-weight:700;font-size:15px;color:var(--ink)">MentorOS · Interactive Story</span>
+</div>
+<div class="wrap">
+<h1>Same student, two revision journeys</h1>
+<p class="lede">Arjun has three weak physics chapters. In Act 1 he gets a pile of questions and no plan. In Act 2 the MentorOS mentor voice finds the concept those chapters share and fixes that first.</p>
+
+<div class="stage" id="stage">
+<svg viewBox="0 0 1200 675" aria-labelledby="capText" role="img">
+<g id="paper"></g>
+<g id="layer"></g>
+</svg>
+</div>
+
+<div class="bar">
+<button class="primary" id="play" aria-label="Pause">❚❚ Pause</button>
+<button id="prev" aria-label="Previous scene">‹</button>
+<button id="next" aria-label="Next scene">›</button>
+<div class="segs" id="segs"></div>
+<button id="restart">Replay</button>
+</div>
+
+<div class="cap" aria-live="polite"><span class="k" id="capK">Act 1 · scene 1</span><p id="capText"></p></div>
+
+<h2>What changes between the two acts</h2>
+<div class="scroll">
+<table class="cmp">
+<thead><tr><th></th><th>Without the mentor voice</th><th>With the mentor voice</th></tr></thead>
+<tbody>
+<tr><td>What he is given</td><td>100 questions (30 per chapter + 10 mixed)</td><td>5 short drills on the shared root</td></tr>
+<tr><td>Who plans</td><td>Arjun, alone, every night</td><td>A ready 60-minute plan</td></tr>
+<tr><td>When he slips</td><td>Answer key at the end of the set</td><td>One question about the exact line that broke</td></tr>
+<tr><td>Similar questions</td><td>All solved, mistake repeated</td><td>Skipped once the skill is shown</td></tr>
+<tr><td>Outcome</td><td>Quits on day 9, root gap still open</td><td>All 3 chapters unlocked</td></tr>
+</tbody>
+</table>
+</div>
+<p class="note">Illustrative storyboard: Arjun, the scores and the counts are sample figures for the demo.</p>
+
+<h2>Voice-over script</h2>
+<ol class="script" id="script"></ol>
+</div>
+
+<script>
+if (window.self !== window.top) {
+  const nb = document.querySelector('.nav-back');
+  if (nb) nb.style.display = 'none';
+}
+{
+const S=document.getElementById('stage'),L=document.getElementById('layer'),P=document.getElementById('paper');
+const D=(d,t)=>`class="d" pathLength="1" style="--d:${d}s;--t:${t||.8}s"`;
+const F=(d,t)=>`class="f" style="--d:${d}s${t?`;--t:${t}s`:''}"`;
+const Pp=(d)=>`class="p" style="--d:${d}s"`;
+const W=(d,t)=>`class="wr" style="--d:${d}s;--t:${t||.9}s"`;
+const T=(x,y,s,o={})=>`<text x="${x}" y="${y}" font-size="${o.size||24}" ${o.anchor?`text-anchor="${o.anchor}"`:''} ${o.bold?'font-weight="700"':''} style="fill:${o.fill||'var(--ink)'}" ${o.w?W(o.d||0,o.t):F(o.d||0)}>${s}</text>`;
+const TL=(x,y,lines,o={})=>lines.map((l,i)=>T(x,y+i*(o.lh||32),l,{...o,d:(o.d||0)+i*(o.step||.25)})).join('');
+const ink='var(--ink)';
+let seed=7;const rnd=()=>(seed=seed*16807%2147483647)/2147483647;
+
+// notebook paper
+let pp='';for(let y=60;y<675;y+=36)pp+=`<line x1="0" x2="1200" y1="${y}" y2="${y}" stroke="var(--rule)" stroke-width="1.5"/>`;
+pp+=`<line x1="92" x2="92" y1="0" y2="675" stroke="var(--margin)" stroke-width="2"/><line x1="98" x2="98" y1="0" y2="675" stroke="var(--margin)" stroke-width="1"/>`;
+P.innerHTML=pp;
+
+const head=(act,title,d=0)=>`<text x="40" y="52" font-size="20" style="fill:${act===2?'var(--green)':'var(--red)'}" ${F(d)}>${act===2?'Act 2':'Act 1'}</text>`+T(120,88,title,{size:34,bold:1,d:d+.1,w:1,t:1});
+
+function stu(x,y,o={}){
+ const m=o.mood||'neutral',s=o.s||1,d=o.d||0,c=o.c||ink;
+ const mouth={neutral:'M-4 -114 H10',sad:'M-5 -109 Q3 -118 11 -109',happy:'M-7 -118 Q3 -104 13 -118',angry:'M-7 -111 l4 -4 l4 4 l4 -4 l4 4'}[m];
+ const brows=m==='angry'?`<path d="M-14 -142 L-2 -137 M18 -142 L6 -137" ${D(d+.6,.3)}/>`:'';
+ const arms=o.arms==='up'?'M-3 -92 L-34 -148 M-3 -92 L34 -152':'M-3 -90 L36 -66 L74 -70';
+ const desk=o.desk===false?'':`<path d="M58 -72 H236 M78 -72 V0 M216 -72 V0" ${D(d+.2,.7)}/>`+(o.book?`<path d="M120 -74 l46 -6 l34 6" stroke="var(--c1)" ${D(d+.6,.5)}/>`:'');
+ const sweat=o.sweat?`<path d="M30 -150 q5 9 0 12 q-5 -3 0 -12" fill="var(--c1)" stroke="none" ${Pp(d+1)}/>`:'';
+ const inner=`<g fill="none" stroke="${c}" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round">
+ <path d="M-48 -98 V0 M-48 -44 H20 M16 -44 V0" stroke="var(--mute)" ${D(d,.6)}/>${desk}
+ <path d="M-3 -102 L-8 -44 L44 -44 L48 0" ${D(d+.1,.7)}/><path d="${arms}" ${D(d+.3,.6)}/>
+ <circle cx="2" cy="-128" r="26" style="fill:var(--paper)" ${D(d,.6)}/><path d="M-23 -136 q8 -24 26 -18 q14 -10 24 8" ${D(d+.3,.5)}/>
+ <circle cx="-7" cy="-130" r="2.8" fill="${c}" stroke="none" ${F(d+.5)}/><circle cx="11" cy="-130" r="2.8" fill="${c}" stroke="none" ${F(d+.5)}/>
+ <path d="${mouth}" ${D(d+.6,.3)}/>${brows}${sweat}</g>`;
+ const wrap=o.walk?`<g class="walk" style="--d:${d}s">${inner}</g>`:o.shake?`<g class="shake" style="--d:${d+1}s">${inner}</g>`:inner;
+ return `<g transform="translate(${x} ${y}) scale(${s})">${wrap}</g>`;
+}
+function scribble(cx,cy,w,h,col,d,n=26){let p=`M${cx} ${cy}`;for(let i=0;i<n;i++)p+=` L${(cx-w/2+rnd()*w).toFixed(0)} ${(cy-h/2+rnd()*h).toFixed(0)}`;return `<path d="${p}" fill="none" stroke="${col}" stroke-width="2.6" stroke-linejoin="round" ${D(d,1.6)}/>`}
+function bubble(x,y,w,h,d,col='var(--ink)',fill='var(--paper)'){return `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="22" fill="${fill}" stroke="${col}" stroke-width="3" ${D(d,.7)}/>`}
+
+const CH=[{x:330,l:['Ch 1 · Motion in a','Straight Line']},{x:600,l:['Ch 2 · Motion','in a Plane']},{x:870,l:['Ch 3 · Laws','of Motion']}];
+const CO=[{x:210,l:['Sign convention','& axes'],to:[0,1,2]},{x:405,l:['Vector','components'],to:[1,2]},{x:600,l:['Vector','addition'],to:[0,1,2]},{x:795,l:['Relative','velocity'],to:[0,1]},{x:990,l:['Net force','along an axis'],to:[2]}];
+function node(cx,cy,w,h,lines,o){
+ const x=cx-w/2,y=cy-h/2;let s=`<g><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="16" style="fill:${o.fill}" stroke="${o.col}" stroke-width="3" ${D(o.d,.7)}/>`;
+ if(o.pulse)s=`<g class="pulse" style="--d:${o.d+1}s"><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="16" style="fill:${o.fill}" stroke="${o.col}" stroke-width="3.5" ${D(o.d,.7)}/>`;
+ if(o.g!=null)s+=`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="16" style="fill:var(--greensoft)" stroke="var(--green)" stroke-width="3.5" ${F(o.g,.4)}/><g ${Pp(o.g+.2)}><circle cx="${x+w-4}" cy="${y+4}" r="15" style="fill:var(--green)"/><path d="M${x+w-11} ${y+4} l5 5 l9 -10" fill="none" stroke="var(--paper)" stroke-width="3.5" stroke-linecap="round"/></g>`;
+ s+=lines.map((l,i)=>`<text x="${cx}" y="${cy+(i-(lines.length-1)/2)*24+7}" text-anchor="middle" font-size="${o.size||21}" ${o.bold?'font-weight="700"':''} ${F(o.d+.4)}>${l}</text>`).join('');
+ return s+'</g>';
+}
+function graph(mode){
+ let e='',n='';const win=mode==='win';
+ CO.forEach((c,i)=>c.to.forEach((t,k)=>{const col=win?'var(--green)':'var(--mute)';e+=`<path d="M${c.x} 368 C${c.x} 290 ${CH[t].x} 280 ${CH[t].x} 202" fill="none" stroke="${col}" stroke-width="${win?3:2.4}" ${D(win?.2:1.1+i*.25+k*.1,.8)}/>`}));
+ CO.forEach((c,i)=>{e+=`<path d="M600 543 C600 490 ${c.x} 480 ${c.x} 432" fill="none" stroke="${win?'var(--green)':'var(--amber)'}" stroke-width="${win?3:3.5}" ${D(win?.2:4.3+i*.12,.6)}/>`});
+ CH.forEach((c,i)=>n+=node(c.x,170,236,64,c.l,{d:win?0:.2+i*.2,col:'var(--red)',fill:'var(--redsoft)',g:win?.9+i*.7:null,bold:1}));
+ CO.forEach((c,i)=>n+=node(c.x,400,178,64,c.l,{d:win?0:2.2+i*.2,col:win?'var(--green)':(c.to.length===3?'var(--amber)':'var(--ink)'),fill:win?'var(--greensoft)':(c.to.length===3?'var(--ambersoft)':'var(--paper)'),size:20}));
+ n+=node(600,575,270,64,['Root gap: signs & vectors'],{d:win?0:3.7,col:win?'var(--green)':'var(--amber)',fill:win?'var(--greensoft)':'var(--ambersoft)',pulse:!win,bold:1,size:22});
+ return e+n;
+}
+function book(x,y,ch,lines,score,d,col){
+ return `<g><rect x="${x}" y="${y}" width="210" height="250" rx="10" style="fill:var(--paper)" stroke="${col}" stroke-width="3.5" ${D(d,.8)}/><line x1="${x+22}" x2="${x+22}" y1="${y}" y2="${y+250}" stroke="${col}" stroke-width="3" ${D(d+.3,.5)}/>
+ ${T(x+40,y+46,'Chapter '+ch,{size:22,fill:col,d:d+.5})}${TL(x+40,y+90,lines,{size:25,bold:1,d:d+.6,lh:32})}
+ <g ${Pp(d+1.4)}><circle cx="${x+150}" cy="${y+200}" r="38" fill="none" stroke="var(--red)" stroke-width="3.5"/><text x="${x+150}" y="${y+210}" text-anchor="middle" font-size="28" font-weight="700" style="fill:var(--red)">${score}</text></g></g>`;
+}
+function orb(x,y,d,r=40){let b='';for(let i=0;i<5;i++){const h=[18,34,48,30,20][i];b+=`<rect x="${x+r+16+i*12}" y="${y-h/2}" width="7" height="${h}" rx="3.5" class="wave" style="fill:var(--green);--d:${d+i*.12}s"/>`}
+ return `<g ${Pp(d)}><circle cx="${x}" cy="${y}" r="${r}" style="fill:var(--green)"/><circle cx="${x}" cy="${y}" r="${r+12}" fill="none" stroke="var(--green)" stroke-width="2.5" opacity=".5"/><path d="M${x-12} ${y-14} a12 12 0 0 1 24 0 v12 a12 12 0 0 1 -24 0 z M${x-20} ${y} a20 20 0 0 0 40 0 M${x} ${y+20} v10" fill="none" stroke="var(--paper)" stroke-width="3.5" stroke-linecap="round"/></g><g ${F(d+.4)}>${b}</g>`;
+}
+
+const scenes=[
+{act:1,name:'Arjun arrives',dur:6,say:'Meet Arjun, Class 11. His unit test is in ten days, and three physics chapters are not clicking.',draw:()=>head(1,'Meet Arjun')+stu(380,590,{walk:1,d:.2,book:1})+`<g>${bubble(720,170,400,170,2.2)}<circle cx="690" cy="360" r="12" fill="none" stroke="${ink}" stroke-width="3" ${D(2,.3)}/><circle cx="662" cy="392" r="7" fill="none" stroke="${ink}" stroke-width="3" ${D(1.9,.3)}/>${TL(752,225,['Unit test in 10 days.','Physics. Again.'],{size:30,d:2.8,w:1,step:.9})}</g>`+T(300,640,'Arjun · Class 11 · JEE foundation',{size:24,fill:'var(--mute)',d:2})},
+{act:1,name:'Three weak chapters',dur:7,say:'Motion in a Straight Line, Motion in a Plane, and Laws of Motion. Three red marks, so it looks like three separate problems.',draw:()=>head(1,'Three weak chapters')+stu(170,620,{mood:'sad',s:.85,d:0})+book(440,170,1,['Motion in a','Straight Line'],'38%',.6,'var(--c1)')+book(680,170,2,['Motion in','a Plane'],'41%',1.3,'var(--c2)')+book(920,170,3,['Laws of','Motion'],'35%',2,'var(--c3)')+T(440,490,'Looks like three separate problems…',{size:28,fill:'var(--red)',d:3.8,w:1,t:1.4})},
+{act:1,name:'100 questions',dur:8,say:'The usual remediation: 30 questions from each chapter plus 10 mixed. A pile of 100 questions.',draw:()=>{let g='';const cols=['var(--c1)','var(--c2)','var(--c3)','var(--red)'];for(let i=0;i<100;i++){const r=Math.floor(i/10),c=i%10,k=r<3?0:r<6?1:r<9?2:3;g+=`<rect x="${470+c*38}" y="${150+r*38}" width="30" height="30" rx="5" style="fill:color-mix(in srgb,${cols[k]} 22%,transparent)" stroke="${cols[k]}" stroke-width="2.4" ${Pp(.8+i*.035)}/>`}
+ const leg=[['30 · Straight line',0],['30 · Motion in a plane',1],['30 · Laws of motion',2],['10 · Mixed',3]].map((l,i)=>`<rect x="900" y="${196+i*58}" width="26" height="26" rx="5" style="fill:color-mix(in srgb,${cols[l[1]]} 22%,transparent)" stroke="${cols[l[1]]}" stroke-width="2.4" ${Pp(1.4+i*1)}/>`+T(940,218+i*58,l[0],{size:24,d:1.5+i*1})).join('');
+ return head(1,'The remediation pack')+T(150,260,'100',{size:120,bold:1,fill:'var(--red)',d:4.6})+T(156,302,'questions',{size:32,fill:'var(--red)',d:4.9})+stu(170,630,{mood:'sad',s:.7,d:.1,sweat:1,desk:false})+g+leg+T(900,470,'Same chapters,',{size:24,fill:'var(--mute)',d:5.6})+T(900,502,'just more of them.',{size:24,fill:'var(--mute)',d:5.9})}},
+{act:1,name:'Trying to plan',dur:9,say:'He tries to plan it himself. Every day the backlog rolls forward. By day 6, 23 of 100 are done.',draw:()=>{const days=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],tasks=[['Ch1','Q1–15'],['Ch1','Q16–30'],['Ch2','Q1–15'],['Ch2','Q16–30'],['Ch3','Q1–15'],['Ch3','Q16–30'],['Mixed','10']];let g=`<rect x="440" y="150" width="700" height="290" rx="12" style="fill:var(--paper)" stroke="${ink}" stroke-width="3" ${D(.3,1)}/>`;
+ days.forEach((dname,i)=>{const x=440+i*100;if(i)g+=`<line x1="${x}" x2="${x}" y1="150" y2="440" stroke="${ink}" stroke-width="2" ${D(.6+i*.08,.4)}/>`;g+=T(x+50,186,dname,{size:22,anchor:'middle',bold:1,d:.9+i*.1})+T(x+50,250,tasks[i][0],{size:22,anchor:'middle',d:1.3+i*.15})+T(x+50,280,tasks[i][1],{size:22,anchor:'middle',d:1.35+i*.15});
+ if(i>0){g+=`<path d="M${x+14} 230 L${x+86} 292 M${x+86} 230 L${x+14} 292" stroke="var(--red)" stroke-width="3" fill="none" ${D(3+i*.5,.35)}/>`+T(x+50,340,'pushed',{size:20,anchor:'middle',fill:'var(--red)',d:3.2+i*.5})}});
+ g+=T(490,340,'9 / 15',{size:22,anchor:'middle',fill:'var(--red)',d:2.6});
+ g+=`<rect x="440" y="490" width="700" height="28" rx="14" fill="none" stroke="${ink}" stroke-width="2.5" ${D(5.8,.6)}/><rect x="440" y="490" width="161" height="28" rx="14" style="fill:var(--red)" ${F(6.4)}/>`+T(440,566,'Day 6 · 23 of 100 done · 77 left',{size:28,bold:1,fill:'var(--red)',d:6.6,w:1});
+ return head(1,'Planning it alone')+stu(180,620,{mood:'sad',s:.85,d:0,sweat:1})+scribble(195,400,110,60,'var(--mute)',1.5)+g}},
+{act:1,name:'Frustrated',dur:7,say:'He makes the same minus-sign slip in every chapter, and nobody connects it. On day 9 he gives up.',draw:()=>head(1,'Day 9: he gives up')+stu(300,610,{mood:'angry',s:1.1,d:0,shake:1})+scribble(330,330,200,90,'var(--red)',.8,40)+TL(640,230,['31 of 100 solved.','Same sign slip in all three chapters.','Nobody connected it.'],{size:30,d:1.6,w:1,lh:46,step:.9})+[1,2,3].map((c,i)=>`<g ${Pp(4.4+i*.3)}><rect x="${640+i*160}" y="420" width="140" height="56" rx="12" style="fill:var(--redsoft)" stroke="var(--red)" stroke-width="3"/><text x="${710+i*160}" y="457" text-anchor="middle" font-size="24" font-weight="700" style="fill:var(--red)">Ch ${c} ✗</text></g>`).join('')+T(640,540,'Root gap still open.',{size:28,bold:1,fill:'var(--red)',d:5.4,w:1})},
+{act:2,name:'The graph',dur:9,say:'Look underneath. All three chapters sit on five sub-skills, and all five trace back to one root gap: signs and vectors.',draw:()=>head(2,'Underneath, the chapters are linked')+graph('reveal')+T(600,648,'Amber sub-skills feed all three chapters; every sub-skill traces back to one root',{size:22,anchor:'middle',fill:'var(--mute)',d:5.6})},
+{act:2,name:'Mentor voice + plan',dur:10,say:'The MentorOS mentor voice steps in. Arjun comes back and gets one plan: five short drills on the shared root, about 60 minutes.',draw:()=>{const rows=[['Sign convention & axes','10'],['Resolve into components','12'],['Vector addition','12'],['Relative velocity','12'],['Net force along an axis','14']];let c=`<rect x="390" y="240" width="460" height="380" rx="16" style="fill:var(--paper)" stroke="var(--green)" stroke-width="3.5" ${D(3.6,.8)}/>`+T(418,284,"Today's plan · 60 min",{size:28,bold:1,fill:'var(--green)',d:4.2,w:1});
+ rows.forEach((r,i)=>{const y=336+i*56;c+=`<circle cx="430" cy="${y-8}" r="12" fill="none" stroke="var(--green)" stroke-width="3" ${D(4.8+i*.45,.4)}/>`+T(456,y,`${i+1}. ${r[0]}`,{size:23,d:4.9+i*.45})+T(828,y,r[1]+' min',{size:22,anchor:'end',fill:'var(--mute)',d:5+i*.45})});
+ return head(2,'The mentor voice steps in')+stu(150,630,{s:.85,d:.2,walk:1})+orb(1010,170,1.2)+bubble(880,240,290,250,1.6,'var(--green)')+TL(904,284,['Arjun, all three','chapters break at','the same place:','signs & vectors.','Five drills first.'],{size:24,d:2,lh:38,step:.35})+c}},
+{act:2,name:'Solving, nodes go green',dur:13,say:'He solves on the scratchpad. When one line slips, the mentor asks about that line instead of giving the answer. Node by node, the graph turns green, and similar questions get skipped.',draw:()=>{let t=`<rect x="110" y="140" width="540" height="490" rx="28" style="fill:var(--paper)" stroke="${ink}" stroke-width="4" ${D(0,.8)}/><rect x="130" y="160" width="500" height="450" rx="14" fill="none" stroke="var(--line)" stroke-width="2" ${F(.4)}/>`;
+ t+=T(150,205,'Drill 2 · F = 20 N, 30° below x-axis',{size:22,fill:'var(--mute)',d:.8,w:1});
+ t+=T(150,262,'Fx = 20 cos 30° = 17.3 N',{size:28,d:1.6,w:1});
+ t+=`<rect x="140" y="290" width="440" height="46" rx="8" style="fill:var(--ambersoft)" stroke="var(--amber)" stroke-width="2.5" ${F(4)}/>`;
+ t+=T(150,322,'Fy = 20 sin 30° = +10 N',{size:28,d:2.8,w:1})+`<line x1="148" x2="456" y1="314" y2="314" stroke="var(--red)" stroke-width="3" ${D(6.8,.4)}/>`;
+ t+=T(150,384,'Fy = −20 sin 30° = −10 N ✓',{size:28,fill:'var(--green)',d:7.2,w:1});
+ t+=`<g ${F(4.4)}>${bubble(150,420,460,160,4.4,'var(--green)')}</g><g ${Pp(4.5)}><circle cx="186" cy="456" r="20" style="fill:var(--green)"/><path d="M180 448 a6 6 0 0 1 12 0 v6 a6 6 0 0 1 -12 0 z" fill="var(--paper)"/></g>`+TL(218,464,['Look at line 3.','Which way does the force','point on your y-axis?'],{size:24,d:4.8,lh:34,step:.4});
+ const g=[1,7.9,9.1,10.1,11.1];let r=T(700,182,'Shared root, drill by drill',{size:24,bold:1,d:.4});
+ CO.forEach((c,i)=>r+=node(850,228+i*66,300,52,[c.l.join(' ')],{d:.5+i*.12,col:'var(--amber)',fill:'var(--ambersoft)',size:20,g:g[i]}));
+ r+=`<g ${Pp(11.9)}><rect x="700" y="560" width="420" height="50" rx="25" style="fill:var(--green)"/><text x="910" y="593" text-anchor="middle" font-size="23" font-weight="700" style="fill:var(--paper)">61 similar questions skipped</text></g>`;
+ return head(2,'Solving with the mentor')+t+r}},
+{act:2,name:'Arjun wins',dur:9,say:'Fix the shared root once and all three chapters unlock. Arjun wins.',draw:()=>{let c='';seed=11;const cols=['var(--green)','var(--amber)','var(--c1)','var(--c2)','var(--c3)'];for(let i=0;i<36;i++){const x=640+rnd()*530,y=40+rnd()*70;c+=`<g transform="rotate(${(rnd()*180).toFixed(0)} ${x.toFixed(0)} ${y.toFixed(0)})"><rect x="${x.toFixed(0)}" y="${y.toFixed(0)}" width="12" height="6" rx="2" style="fill:${cols[i%5]}" ${Pp(2.9+rnd()*1.2)}/></g>`}
+ return head(2,'All three chapters unlocked')+graph('win')+stu(960,660,{mood:'happy',arms:'up',s:.75,d:2.6,desk:false})+`<g ${Pp(3.4)}><path d="M1062 540 h56 v18 a28 28 0 0 1 -56 0 z M1062 548 h-12 a12 12 0 0 0 12 18 M1118 548 h12 a12 12 0 0 1 -12 18 M1090 586 v16 M1072 610 h36" style="fill:var(--amber)" stroke="var(--amber)" stroke-width="4" stroke-linejoin="round"/></g>`+c+T(130,650,'Arjun wins.',{size:34,bold:1,fill:'var(--green)',d:3.8,w:1})}}
+];
+
+const total=scenes.reduce((a,s)=>a+s.dur,0);
+let i=0,t=0,playing=true,last=performance.now();
+const segs=document.getElementById('segs'),script=document.getElementById('script'),play=document.getElementById('play');
+segs.innerHTML=scenes.map((s,k)=>`<button class="seg ${s.act===2?'a2':''}" data-k="${k}" aria-label="Scene ${k+1}: ${s.name}"><i><b></b></i></button>`).join('');
+script.innerHTML=scenes.map((s,k)=>`<li class="${s.act===2?'a2':''}"><button data-k="${k}"><span class="n">${k+1}</span><b>${s.name}</b><span>${s.say}</span></button></li>`).join('');
+const bars=[...segs.querySelectorAll('b')];
+function setPlay(p){playing=p;S.classList.toggle('paused',!p);play.textContent=p?'❚❚ Pause':'▶ Play';play.setAttribute('aria-label',p?'Pause':'Play')}
+function go(k){i=Math.max(0,Math.min(scenes.length-1,k));t=0;seed=7;
+ L.innerHTML=scenes[i].draw();
+ const s=scenes[i];document.getElementById('capText').textContent=s.say;
+ const ck=document.getElementById('capK');ck.textContent=`Act ${s.act} · ${s.act===1?'without':'with'} the mentor voice · scene ${i+1} of ${scenes.length}`;ck.classList.toggle('act2',s.act===2);
+ script.querySelectorAll('button').forEach((b,n)=>b.classList.toggle('on',n===i));
+ bars.forEach((b,n)=>b.style.width=n<i?'100%':'0%');
+}
+function tick(now){const dt=Math.min(.1,(now-last)/1000);last=now;
+ if(playing){t+=dt;if(t>=scenes[i].dur){if(i<scenes.length-1)go(i+1);else{t=scenes[i].dur;setPlay(false);play.textContent='▶ Replay'}}}
+ bars[i].style.width=Math.min(100,t/scenes[i].dur*100)+'%';requestAnimationFrame(tick)}
+play.addEventListener('click',()=>{if(!playing&&i===scenes.length-1&&t>=scenes[i].dur){go(0);setPlay(true);return}setPlay(!playing)});
+document.getElementById('prev').addEventListener('click',()=>go(i-1));
+document.getElementById('next').addEventListener('click',()=>go(i+1));
+document.getElementById('restart').addEventListener('click',()=>{go(0);setPlay(true)});
+segs.addEventListener('click',e=>{const b=e.target.closest('[data-k]');if(b)go(+b.dataset.k)});
+script.addEventListener('click',e=>{const b=e.target.closest('[data-k]');if(b){go(+b.dataset.k);S.scrollIntoView({behavior:'smooth',block:'center'})}});
+document.addEventListener('keydown',e=>{if(e.target.tagName==='BUTTON')return;if(e.code==='Space'){e.preventDefault();play.click()}if(e.code==='ArrowRight')go(i+1);if(e.code==='ArrowLeft')go(i-1)});
+go(0);requestAnimationFrame(tick);
+}
+</script>
+</body>
+</html>
