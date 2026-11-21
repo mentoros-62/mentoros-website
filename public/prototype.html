@@ -1,0 +1,1096 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MentorOS — Calm Paper & Ink AI Socratic Tutor</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Caveat:wght@600;700&display=swap" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+            hand: ['Caveat', 'cursive'],
+          },
+          colors: {
+            paper: '#FAF9F6',
+            ink: '#111827',
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    /* Warm GoodNotes / Apple Notes dot-grid paper */
+    .paper-grid {
+      background-color: #FAF9F6;
+      background-image: radial-gradient(#D1D5DB 1px, transparent 1px);
+      background-size: 22px 22px;
+    }
+
+    /* Ultra-clean subtle scrollbars */
+    ::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #E5E7EB;
+      border-radius: 999px;
+    }
+
+    /* Gentle voice waveform animation */
+    @keyframes voicePulse {
+      0%, 100% { transform: scaleY(0.35); }
+      50% { transform: scaleY(1); }
+    }
+    .voice-bar {
+      animation: voicePulse 0.85s ease-in-out infinite;
+      transform-origin: center;
+    }
+    .voice-idle .voice-bar {
+      animation: none;
+      transform: scaleY(0.3);
+    }
+
+    /* Smooth drawer & popover transitions */
+    .drawer-panel {
+      transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.22s ease;
+    }
+
+    canvas {
+      touch-action: none;
+    }
+  </style>
+</head>
+<body class="bg-[#F3F4F6] text-ink font-sans antialiased min-h-screen flex flex-col overflow-x-hidden select-none">
+
+  <!-- =========================================================
+       TOP MINIMAL BAR (52px height, hairline 1px border)
+       ========================================================= -->
+  <header class="h-[52px] bg-white/95 backdrop-blur border-b border-gray-200 px-4 sm:px-6 flex items-center justify-between gap-2 sticky top-0 z-40">
+    <!-- Left: Brand & Student Context -->
+    <div class="flex items-center gap-3 min-w-0">
+      <div class="flex items-center gap-2 shrink-0">
+        <div class="w-7 h-7 rounded-lg bg-blue-600 text-white font-semibold text-sm flex items-center justify-center shadow-xs">
+          M
+        </div>
+        <span class="font-semibold text-sm tracking-tight text-gray-900">MentorOS</span>
+      </div>
+      <span class="hidden md:inline-block h-4 w-px bg-gray-200"></span>
+      <span class="hidden md:inline-flex items-center gap-1.5 text-xs text-gray-500 bg-gray-50 border border-gray-200/80 px-2.5 py-1 rounded-full truncate">
+        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+        Aarav • Class 10 Foundation • Apex Academy
+      </span>
+    </div>
+
+    <!-- Center: Clean 3-Step Session Progress Pill -->
+    <nav id="studentStepNav" class="flex items-center bg-gray-100/90 p-0.5 rounded-full border border-gray-200/70 text-xs font-medium">
+      <button id="stepPill0" onclick="goToStage(0)" class="px-3 py-1 rounded-full bg-white text-gray-900 shadow-xs transition">
+        1. Daily Plan
+      </button>
+      <button id="stepPill1" onclick="goToStage(1)" class="px-3 py-1 rounded-full text-gray-500 hover:text-gray-900 transition">
+        2. Concept Flow
+      </button>
+      <button id="stepPill2" onclick="goToStage(2)" class="px-3 py-1 rounded-full text-gray-500 hover:text-gray-900 transition">
+        3. Live Scratchpad
+      </button>
+    </nav>
+
+    <!-- Right: View Toggle Pill + Subtle Engine Telemetry Drawer Trigger -->
+    <div class="flex items-center gap-2 shrink-0">
+      <div class="hidden sm:flex items-center bg-gray-100/90 p-0.5 rounded-full border border-gray-200/70 text-xs font-medium">
+        <button id="tabStudent" onclick="switchView('student')" class="px-2.5 py-1 rounded-full bg-white text-gray-900 shadow-xs transition">
+          Student Tablet
+        </button>
+        <button id="tabHOD" onclick="switchView('hod')" class="px-2.5 py-1 rounded-full text-gray-500 hover:text-gray-900 transition">
+          HOD Insights
+        </button>
+      </div>
+
+      <!-- Mobile HOD toggle icon -->
+      <button onclick="toggleMobileView()" class="sm:hidden w-8 h-8 rounded-full border border-gray-200 bg-white text-gray-600 flex items-center justify-center text-xs" title="Switch Student / HOD View">
+        <i class="fa-solid fa-repeat"></i>
+      </button>
+
+      <button onclick="toggleTelemetryDrawer()" class="px-2.5 py-1 rounded-full border border-gray-200 bg-white hover:bg-gray-50 text-xs font-medium text-gray-600 flex items-center gap-1.5 transition">
+        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+        <span class="hidden lg:inline">Engine Telemetry</span>
+        <span class="lg:hidden">Telemetry</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- =========================================================
+       MAIN WORKSPACE (Generous whitespace around tablet frame)
+       ========================================================= -->
+  <main class="flex-1 flex justify-center items-stretch p-2 sm:p-5 lg:p-6">
+
+    <!-- =======================================================
+         PRIMARY SURFACE: STUDENT TABLET CANVAS (Paper & Ink)
+         ======================================================= -->
+    <div id="studentSurface" class="w-full max-w-5xl bg-paper rounded-[28px] border border-gray-200/90 shadow-sm overflow-hidden flex flex-col relative">
+
+      <!-- *******************************************************
+           VIEW 1: ZERO-DECISION-FATIGUE DAILY PLAN
+           ******************************************************* -->
+      <section id="stage0" class="flex-1 paper-grid flex flex-col justify-center items-center px-6 py-12">
+        <div class="w-full max-w-xl bg-white rounded-3xl border border-gray-200/90 p-7 sm:p-10 shadow-xs">
+          <div class="flex items-center justify-between mb-6">
+            <span class="text-xs font-medium text-blue-600 bg-blue-50 border border-blue-100 px-3 py-1 rounded-full">
+              Today's Autonomous Path • 55 min
+            </span>
+            <span class="text-xs font-mono text-gray-400">Minor Test in 3d</span>
+          </div>
+
+          <h1 class="text-2xl sm:text-[26px] font-semibold tracking-tight text-gray-900 leading-snug">
+            Good evening, Aarav. Your mentor has prepared today's 55-minute path.
+          </h1>
+          <p class="text-sm text-gray-500 mt-2 leading-relaxed">
+            Synced automatically with today's Physics lecture and your forgetting-curve schedule. Just open and follow.
+          </p>
+
+          <!-- Clean 3-Item Vertical Timeline -->
+          <div class="mt-8 space-y-0 relative">
+            <!-- Vertical Hairline Connector -->
+            <div class="absolute left-[15px] top-4 bottom-4 w-px bg-gray-200"></div>
+
+            <!-- Item 1 -->
+            <div class="relative flex items-start gap-4 pb-6">
+              <div class="w-8 h-8 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center text-xs shrink-0 z-10">
+                <i class="fa-solid fa-check"></i>
+              </div>
+              <div class="pt-1 flex-1 flex items-center justify-between gap-2">
+                <div>
+                  <p class="text-sm font-medium text-gray-900">Warm-Up Retention</p>
+                  <p class="text-xs text-gray-500 mt-0.5">Spaced Repetition: Quadratic Roots</p>
+                </div>
+                <span class="text-xs font-mono text-gray-400 shrink-0">5 min</span>
+              </div>
+            </div>
+
+            <!-- Item 2 -->
+            <div class="relative flex items-start gap-4 pb-6">
+              <div class="w-8 h-8 rounded-full bg-blue-600 text-white font-semibold flex items-center justify-center text-xs shrink-0 z-10 shadow-xs">
+                2
+              </div>
+              <div class="pt-1 flex-1 flex items-center justify-between gap-2">
+                <div>
+                  <p class="text-sm font-semibold text-gray-900">Interactive Concept Flow</p>
+                  <p class="text-xs text-gray-500 mt-0.5">2D Projectile Motion & Vector Components</p>
+                </div>
+                <span class="text-xs font-mono text-blue-600 font-medium shrink-0">15 min</span>
+              </div>
+            </div>
+
+            <!-- Item 3 -->
+            <div class="relative flex items-start gap-4">
+              <div class="w-8 h-8 rounded-full bg-white border border-gray-300 text-gray-500 font-medium flex items-center justify-center text-xs shrink-0 z-10">
+                3
+              </div>
+              <div class="pt-1 flex-1 flex items-center justify-between gap-2">
+                <div>
+                  <p class="text-sm font-medium text-gray-900">Adaptive Guided Practice</p>
+                  <p class="text-xs text-gray-500 mt-0.5">Institute DPP-07 • 6 Questions</p>
+                </div>
+                <span class="text-xs font-mono text-gray-400 shrink-0">35 min</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Single Prominent Primary CTA -->
+          <div class="mt-9 pt-6 border-t border-gray-100 flex items-center justify-between gap-4">
+            <span class="text-xs text-gray-400 hidden sm:inline">Apple Pencil / Stylus Ready</span>
+            <button onclick="goToStage(1)" class="w-full sm:w-auto px-6 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 active:scale-[0.99] text-white font-medium text-sm shadow-xs transition flex items-center justify-center gap-2">
+              <span>Start Today's Session</span>
+              <span aria-hidden="true">→</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- *******************************************************
+           VIEW 2: INTERACTIVE CONCEPT FLOW (MICRO-CHECKPOINTS)
+           ******************************************************* -->
+      <section id="stage1" class="hidden flex-1 flex flex-col">
+        <!-- Top Half: Clean Visual Concept Card -->
+        <div class="bg-white border-b border-gray-200 px-6 py-5">
+          <div class="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+            <!-- Animated SVG Projectile Diagram -->
+            <div class="md:col-span-5 bg-paper border border-gray-200 rounded-2xl p-4">
+              <div class="flex items-center justify-between text-[11px] font-mono text-gray-400 mb-2">
+                <span>CONCEPT BURST • 45s</span>
+                <span class="text-blue-600">aₓ = 0</span>
+              </div>
+              <svg viewBox="0 0 280 120" class="w-full h-28">
+                <line x1="24" y1="100" x2="260" y2="100" stroke="#CBD5E1" stroke-width="1.2" />
+                <line x1="24" y1="100" x2="24" y2="14" stroke="#CBD5E1" stroke-width="1.2" />
+                <path d="M 24 100 Q 138 6 252 100" fill="none" stroke="#2563EB" stroke-width="2" stroke-dasharray="4,4" />
+                <!-- Moving particle & horizontal constant vector -->
+                <circle cx="95" cy="60" r="4" fill="#111827" />
+                <line x1="95" y1="60" x2="142" y2="60" stroke="#10B981" stroke-width="2" />
+                <text x="96" y="51" fill="#059669" font-size="10" font-family="JetBrains Mono">vx = u cosθ</text>
+                <line x1="95" y1="60" x2="95" y2="32" stroke="#2563EB" stroke-width="2" />
+                <text x="42" y="38" fill="#2563EB" font-size="10" font-family="JetBrains Mono">vy = u sinθ - gt</text>
+              </svg>
+            </div>
+
+            <!-- Calm 2-Sentence Mentor Prompt -->
+            <div class="md:col-span-7 space-y-3">
+              <div class="flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-blue-600"></span>
+                <span class="text-xs font-medium text-blue-600">15-Second Micro-Checkpoint</span>
+              </div>
+              <p class="text-base text-gray-900 leading-relaxed">
+                Because gravity acts purely downward, horizontal acceleration is zero and <span class="font-mono text-sm bg-gray-100 px-1.5 py-0.5 rounded">vₓ = u cosθ</span> stays constant throughout flight.
+              </p>
+              <p class="text-sm text-gray-600">
+                <b>Your turn:</b> Sketch the horizontal velocity <span class="font-mono text-xs bg-gray-100 px-1 py-0.5 rounded">vₓ</span> vs. time <span class="font-mono text-xs bg-gray-100 px-1 py-0.5 rounded">t</span> graph on the dot-grid below.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bottom Half: Open Paper Dot-Grid Canvas (~70% open space) -->
+        <div class="flex-1 paper-grid relative min-h-[360px]">
+          <canvas id="canvasStage1" class="w-full h-full block cursor-crosshair"></canvas>
+
+          <!-- Immediate Socratic Feedback Toast -->
+          <div id="stage1Toast" class="hidden absolute top-4 left-1/2 -translate-x-1/2 w-[92%] max-w-lg bg-white rounded-2xl border p-4 shadow-lg z-20 transition-all"></div>
+
+          <!-- Floating Bottom Pill Toolbar -->
+          <div class="absolute bottom-5 left-1/2 -translate-x-1/2 z-20 flex flex-wrap items-center justify-center gap-2 w-[94%] max-w-2xl">
+            <div class="bg-white/95 backdrop-blur border border-gray-200 shadow-md rounded-full px-3 py-1.5 flex items-center gap-1.5 text-xs">
+              <button onclick="setTool('canvasStage1', '#111827', 2.2)" class="w-7 h-7 rounded-full bg-gray-900 text-white flex items-center justify-center" title="Stylus Pen">
+                <i class="fa-solid fa-pen text-[11px]"></i>
+              </button>
+              <button onclick="setTool('canvasStage1', '#FAF9F6', 18)" class="w-7 h-7 rounded-full hover:bg-gray-100 text-gray-600 flex items-center justify-center" title="Eraser">
+                <i class="fa-solid fa-eraser text-[11px]"></i>
+              </button>
+              <button onclick="clearStage1()" class="px-2.5 py-1 rounded-full hover:bg-gray-100 text-gray-600 font-medium">
+                Clear
+              </button>
+              <span class="h-4 w-px bg-gray-200 mx-1"></span>
+              <button onclick="simulateConceptSketch('error')" class="px-2.5 py-1 rounded-full bg-amber-50 hover:bg-amber-100 text-amber-800 font-medium transition">
+                Simulate Common Error
+              </button>
+              <button onclick="simulateConceptSketch('correct')" class="px-2.5 py-1 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium transition">
+                Simulate Correct Sketch
+              </button>
+              <button onclick="simulateConceptSketch('correct')" class="ml-1 px-3.5 py-1.5 rounded-full bg-blue-600 hover:bg-blue-700 text-white font-medium transition">
+                Check
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- *******************************************************
+           VIEW 3: SIGNATURE LIVE SCRATCHPAD (STEP-LEVEL SOCRATIC)
+           ******************************************************* -->
+      <section id="stage2" class="hidden flex-1 flex flex-col relative">
+        <!-- Pinned Sleek Problem Header -->
+        <div class="bg-white border-b border-gray-200 px-6 py-4">
+          <div class="max-w-4xl mx-auto flex flex-wrap items-baseline justify-between gap-3">
+            <div class="flex items-baseline gap-3">
+              <span id="problemTag" class="font-mono text-xs font-semibold text-blue-600 bg-blue-50 border border-blue-100 px-2.5 py-0.5 rounded-md shrink-0">
+                Q3 • Apex DPP-07
+              </span>
+              <p id="problemStatement" class="text-sm sm:text-base text-gray-900 leading-snug">
+                A particle's vertical velocity is <span class="font-mono text-sm bg-gray-100 px-1.5 py-0.5 rounded">vᵧ(t) = 20 − 10t</span>. Find displacement <span class="font-mono text-sm bg-gray-100 px-1.5 py-0.5 rounded">Δy</span> from <span class="font-mono text-sm bg-gray-100 px-1.5 py-0.5 rounded">t = 0</span> to <span class="font-mono text-sm bg-gray-100 px-1.5 py-0.5 rounded">t = 3 s</span>.
+              </p>
+            </div>
+            <span id="skillBadge" class="text-xs font-mono text-gray-400 shrink-0">
+              Sub-skill: Kinematics Integration
+            </span>
+          </div>
+        </div>
+
+        <!-- Expansive, Distraction-Free Dot-Grid Canvas (~75% of screen) -->
+        <div class="flex-1 paper-grid relative min-h-[450px]">
+          <canvas id="canvasStage2" class="w-full h-full block cursor-crosshair"></canvas>
+
+          <!-- Calm Socratic Mentor Bubble (Appears beside Line 3 or on Voice/Mastery) -->
+          <div id="socraticBubble" class="hidden absolute top-44 left-6 sm:left-12 right-6 sm:right-auto sm:max-w-md bg-white rounded-2xl border border-amber-300 p-4 shadow-lg z-20 transition-all">
+            <div class="flex items-start justify-between gap-3">
+              <div class="flex items-center gap-2">
+                <span id="bubbleDot" class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+                <span id="bubbleLabel" class="text-xs font-semibold text-amber-800">Step-3 Socratic Check</span>
+              </div>
+              <button onclick="hideBubble()" class="text-gray-400 hover:text-gray-600 text-xs">
+                <i class="fa-solid fa-xmark"></i>
+              </button>
+            </div>
+            <p id="bubbleText" class="text-sm text-gray-800 mt-2 leading-relaxed"></p>
+            <div id="bubbleCTA" class="mt-3"></div>
+          </div>
+
+          <!-- Minimal Floating Bottom Dock -->
+          <div class="absolute bottom-5 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-2 w-[95%] max-w-2xl">
+            <!-- Expandable Demo Scenarios Popover -->
+            <div id="demoPopover" class="hidden bg-white/95 backdrop-blur border border-gray-200 rounded-2xl p-2 shadow-lg flex flex-wrap items-center justify-center gap-1.5 text-xs">
+              <button onclick="triggerScenario('error')" class="px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 font-medium border border-amber-200/80 transition">
+                A: Step-3 Integration Slip (Signature Wedge)
+              </button>
+              <button onclick="triggerScenario('mastery')" class="px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-900 font-medium border border-emerald-200/80 transition">
+                B: Clean Mastery Solve (Auto-Skip Q4–Q5)
+              </button>
+              <button onclick="triggerScenario('voice')" class="px-3 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-900 font-medium border border-blue-200/80 transition">
+                C: Think-Aloud Voice Interrupt
+              </button>
+            </div>
+
+            <!-- Primary Floating Stylus & Mic Dock -->
+            <div class="bg-white/95 backdrop-blur border border-gray-200 shadow-md rounded-full px-3.5 py-1.5 flex items-center gap-2 text-xs">
+              <button id="btnPen" onclick="selectStylusMode('pen')" class="w-8 h-8 rounded-full bg-gray-900 text-white flex items-center justify-center transition" title="Apple Pencil / Stylus">
+                <i class="fa-solid fa-pen text-xs"></i>
+              </button>
+              <button id="btnEraser" onclick="selectStylusMode('eraser')" class="w-8 h-8 rounded-full hover:bg-gray-100 text-gray-600 flex items-center justify-center transition" title="Eraser">
+                <i class="fa-solid fa-eraser text-xs"></i>
+              </button>
+              <button onclick="resetStage2()" class="px-2.5 py-1 rounded-full hover:bg-gray-100 text-gray-600 font-medium transition">
+                Clear
+              </button>
+
+              <span class="h-4 w-px bg-gray-200"></span>
+
+              <!-- Think-Aloud Mic Toggle with Subtle Waveform -->
+              <button id="btnMic" onclick="toggleMic()" class="px-3 py-1.5 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium flex items-center gap-2 transition">
+                <i class="fa-solid fa-microphone text-blue-600"></i>
+                <span id="micLabel">Think-Aloud</span>
+                <span id="micWave" class="voice-idle flex items-center gap-0.5 h-3">
+                  <span class="voice-bar w-0.5 h-3 bg-blue-600 rounded-full" style="animation-delay:0s"></span>
+                  <span class="voice-bar w-0.5 h-3 bg-blue-600 rounded-full" style="animation-delay:0.2s"></span>
+                  <span class="voice-bar w-0.5 h-3 bg-blue-600 rounded-full" style="animation-delay:0.4s"></span>
+                </span>
+              </button>
+
+              <span class="h-4 w-px bg-gray-200"></span>
+
+              <!-- Demo Scenarios Pill Button -->
+              <button onclick="toggleDemoPopover()" class="px-3 py-1.5 rounded-full bg-blue-600 hover:bg-blue-700 text-white font-medium flex items-center gap-1.5 transition">
+                <span>Demo Scenarios</span>
+                <i class="fa-solid fa-chevron-up text-[10px]"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Clean Slide-Over 2-Min Integration Micro-Drill Drawer -->
+          <div id="microDrillPanel" class="drawer-panel translate-x-full opacity-0 pointer-events-none absolute top-0 right-0 bottom-0 w-full sm:w-[380px] bg-white border-l border-gray-200 shadow-xl z-30 p-6 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between pb-4 border-b border-gray-100">
+                <div>
+                  <span class="text-[11px] font-mono uppercase tracking-wider text-amber-600 font-semibold">
+                    Just-in-Time Sub-Skill Drill
+                  </span>
+                  <h3 class="text-base font-semibold text-gray-900 mt-0.5">
+                    Integration Power Rule ($\int t^n\,dt$)
+                  </h3>
+                </div>
+                <button onclick="closeMicroDrill()" class="w-7 h-7 rounded-full hover:bg-gray-100 text-gray-500 flex items-center justify-center">
+                  <i class="fa-solid fa-xmark text-xs"></i>
+                </button>
+              </div>
+
+              <p class="text-xs text-gray-500 mt-4 leading-relaxed">
+                Your kinematics equation was right. Let's lock in dividing by <span class="font-mono text-gray-800">(n + 1)</span> with two 15-second reps before returning to Q3:
+              </p>
+
+              <!-- Rep 1 -->
+              <div class="mt-5 p-4 rounded-2xl bg-paper border border-gray-200">
+                <p class="text-xs font-medium text-gray-800 mb-2.5">1. Evaluate <span class="font-mono bg-white px-1.5 py-0.5 rounded border border-gray-200">∫₀³ 10t dt</span></p>
+                <div class="grid grid-cols-3 gap-2 font-mono text-xs">
+                  <button onclick="checkDrillRep(1, false, this)" class="py-2 rounded-xl bg-white border border-gray-200 hover:border-blue-500 font-medium">90</button>
+                  <button onclick="checkDrillRep(1, true, this)" class="py-2 rounded-xl bg-white border border-gray-200 hover:border-blue-500 font-medium">45</button>
+                  <button onclick="checkDrillRep(1, false, this)" class="py-2 rounded-xl bg-white border border-gray-200 hover:border-blue-500 font-medium">30</button>
+                </div>
+                <p id="repMsg1" class="text-[11px] mt-2 hidden"></p>
+              </div>
+
+              <!-- Rep 2 -->
+              <div class="mt-3 p-4 rounded-2xl bg-paper border border-gray-200">
+                <p class="text-xs font-medium text-gray-800 mb-2.5">2. Evaluate <span class="font-mono bg-white px-1.5 py-0.5 rounded border border-gray-200">∫₀² 6t dt</span></p>
+                <div class="grid grid-cols-3 gap-2 font-mono text-xs">
+                  <button onclick="checkDrillRep(2, false, this)" class="py-2 rounded-xl bg-white border border-gray-200 hover:border-blue-500 font-medium">24</button>
+                  <button onclick="checkDrillRep(2, false, this)" class="py-2 rounded-xl bg-white border border-gray-200 hover:border-blue-500 font-medium">6</button>
+                  <button onclick="checkDrillRep(2, true, this)" class="py-2 rounded-xl bg-white border border-gray-200 hover:border-blue-500 font-medium">12</button>
+                </div>
+                <p id="repMsg2" class="text-[11px] mt-2 hidden"></p>
+              </div>
+            </div>
+
+            <button id="btnFinishDrill" disabled onclick="finishMicroDrill()" class="w-full py-3 rounded-2xl bg-gray-100 text-gray-400 font-medium text-sm transition">
+              Complete Both Reps to Resume Q3
+            </button>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- =======================================================
+         SECONDARY VIEW: HOD FACULTY DIAGNOSTIC HEATMAP (B2B2C)
+         ======================================================= -->
+    <div id="hodSurface" class="hidden w-full max-w-5xl bg-white rounded-[28px] border border-gray-200/90 shadow-sm overflow-hidden flex flex-col">
+      <div class="px-6 sm:px-8 py-6 border-b border-gray-200 flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <span class="text-xs font-mono text-blue-600 font-medium">B2B2C Institute Diagnostic Rollup</span>
+          <h1 class="text-xl sm:text-2xl font-semibold text-gray-900 mt-1">
+            Apex Foundation Academy — Batch 10A (84 Students)
+          </h1>
+          <p class="text-xs text-gray-500 mt-0.5">Nightly stroke-level telemetry aggregated ahead of Sunday Minor Test #04</p>
+        </div>
+        <button id="btnGenerateRecap" onclick="triggerClassRecap()" class="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs sm:text-sm shadow-xs transition flex items-center gap-2">
+          <i class="fa-solid fa-sparkles"></i>
+          <span>Generate 10-Min Class Recap</span>
+        </button>
+      </div>
+
+      <!-- Confirmation Banner -->
+      <div id="recapToast" class="hidden bg-emerald-50 border-b border-emerald-200 px-6 py-3 text-xs font-medium text-emerald-900 flex items-center justify-between">
+        <span><i class="fa-solid fa-circle-check text-emerald-600 mr-2"></i>Generated 10-Min Classroom Slide Recap on <b>Definite Integral Power Rule</b> & synced warm-up to all 84 student tablets.</span>
+        <button onclick="document.getElementById('recapToast').classList.add('hidden')" class="text-emerald-700 hover:text-emerald-950"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="p-6 sm:p-8 space-y-6">
+        <!-- Clean 3-Metric Strip -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div class="p-5 rounded-2xl bg-paper border border-gray-200">
+            <p class="text-xs text-gray-500 font-medium">DPP-07 Assignment Completion</p>
+            <p class="text-3xl font-semibold text-gray-900 mt-1">78% <span class="text-xs font-normal text-gray-500">(66 / 84)</span></p>
+          </div>
+          <div class="p-5 rounded-2xl bg-amber-50/70 border border-amber-200">
+            <p class="text-xs text-amber-800 font-medium">Primary Sub-Skill Bottleneck</p>
+            <p class="text-xl font-semibold text-gray-900 mt-1.5">Definite Integral Power Rule</p>
+            <p class="text-xs text-amber-700 mt-1"><b>41% failed</b> inside Physics kinematics problems</p>
+          </div>
+          <div class="p-5 rounded-2xl bg-paper border border-gray-200">
+            <p class="text-xs text-gray-500 font-medium">Doubt-Counter Hours Saved</p>
+            <p class="text-3xl font-semibold text-blue-600 mt-1">19.5 hrs</p>
+          </div>
+        </div>
+
+        <!-- Atomic Sub-Skill Breakdown -->
+        <div class="p-6 rounded-2xl bg-paper border border-gray-200">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h2 class="text-base font-semibold text-gray-900">Atomic Sub-Skill Failure Breakdown (DPP-07)</h2>
+              <p class="text-xs text-gray-500 mt-0.5">Pinpointing exact step-level failures rather than broad chapter labels</p>
+            </div>
+          </div>
+
+          <div class="space-y-4">
+            <div>
+              <div class="flex justify-between text-xs font-medium mb-1.5">
+                <span class="text-gray-900">1. Definite Integral Power Rule (<span class="font-mono">∫ tⁿ dt</span> denominator)</span>
+                <span class="font-mono text-amber-700 font-semibold">41% error rate (34 students)</span>
+              </div>
+              <div class="w-full h-2.5 bg-gray-200 rounded-full overflow-hidden">
+                <div class="h-full bg-amber-500 rounded-full" style="width: 41%"></div>
+              </div>
+            </div>
+
+            <div>
+              <div class="flex justify-between text-xs font-medium mb-1.5">
+                <span class="text-gray-900">2. Downward Acceleration Sign Convention (<span class="font-mono">-g</span>)</span>
+                <span class="font-mono text-gray-600">19% error rate (16 students)</span>
+              </div>
+              <div class="w-full h-2.5 bg-gray-200 rounded-full overflow-hidden">
+                <div class="h-full bg-blue-500 rounded-full" style="width: 19%"></div>
+              </div>
+            </div>
+
+            <div>
+              <div class="flex justify-between text-xs font-medium mb-1.5">
+                <span class="text-gray-900">3. Kinematics Equation Setup (<span class="font-mono">Δy = ∫ vᵧ dt</span>)</span>
+                <span class="font-mono text-emerald-600 font-semibold">94% mastered</span>
+              </div>
+              <div class="w-full h-2.5 bg-gray-200 rounded-full overflow-hidden">
+                <div class="h-full bg-emerald-500 rounded-full" style="width: 94%"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- =========================================================
+       OPTIONAL SLIDE-OVER DRAWER: 3-ENGINE TELEMETRY & UNIT ECONOMICS
+       (Closed by default to preserve serene student UX)
+       ========================================================= -->
+  <div id="telemetryBackdrop" onclick="toggleTelemetryDrawer()" class="hidden fixed inset-0 bg-gray-900/20 backdrop-blur-[1px] z-40"></div>
+  <aside id="telemetryDrawer" class="drawer-panel translate-x-full opacity-0 pointer-events-none fixed top-0 right-0 bottom-0 w-full sm:w-[400px] bg-white border-l border-gray-200 shadow-2xl z-50 flex flex-col">
+    <div class="px-5 py-4 border-b border-gray-200 flex items-center justify-between">
+      <div>
+        <span class="text-[11px] font-mono uppercase tracking-wider text-blue-600 font-semibold">Judge & Investor Inspector</span>
+        <h2 class="text-base font-semibold text-gray-900">3-Engine Telemetry & COGS</h2>
+      </div>
+      <button onclick="toggleTelemetryDrawer()" class="w-8 h-8 rounded-full hover:bg-gray-100 text-gray-500 flex items-center justify-center">
+        <i class="fa-solid fa-xmark text-xs"></i>
+      </button>
+    </div>
+
+    <div class="p-5 overflow-y-auto space-y-5 flex-1 text-xs">
+      <!-- Unit Economics Summary Card -->
+      <div class="p-4 rounded-2xl bg-paper border border-gray-200 space-y-2.5">
+        <div class="flex items-center justify-between">
+          <span class="font-semibold text-gray-900">Event-Driven Margin Guardrail</span>
+          <span class="font-mono text-emerald-600 font-semibold bg-emerald-50 px-2 py-0.5 rounded-full">84.9% Gross Margin</span>
+        </div>
+        <p class="text-gray-500 leading-relaxed">
+          Client-side stroke heuristics (12s pause, line break, VAD) avoid continuous video streaming—cutting monthly COGS from <b>₹880</b> down to <b>₹68 / student</b> against a <b>₹450</b> B2B2C seat fee.
+        </p>
+        <div class="grid grid-cols-3 gap-2 pt-1 font-mono text-[11px]">
+          <div class="bg-white p-2 rounded-xl border border-gray-200">
+            <p class="text-gray-400">Triggers</p>
+            <p id="telTriggerCount" class="font-semibold text-gray-900 mt-0.5">1 call</p>
+          </div>
+          <div class="bg-white p-2 rounded-xl border border-gray-200">
+            <p class="text-gray-400">COGS / Mo</p>
+            <p class="font-semibold text-emerald-600 mt-0.5">₹68.00</p>
+          </div>
+          <div class="bg-white p-2 rounded-xl border border-gray-200">
+            <p class="text-gray-400">Cache Hit</p>
+            <p class="font-semibold text-blue-600 mt-0.5">70%</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Architecture Engine Status -->
+      <div class="space-y-2">
+        <p class="font-semibold text-gray-900">Active Engine Pipeline</p>
+        <div class="p-3 rounded-xl border border-gray-200 flex items-center justify-between">
+          <div>
+            <p class="font-medium text-gray-900">Engine 1: Curriculum DAG</p>
+            <p class="text-gray-500 text-[11px]">Pre-indexed Apex syllabus & step rubrics</p>
+          </div>
+          <span class="font-mono text-[10px] bg-gray-100 text-gray-600 px-2 py-0.5 rounded">CACHED</span>
+        </div>
+        <div class="p-3 rounded-xl border border-gray-200 flex items-center justify-between">
+          <div>
+            <p class="font-medium text-gray-900">Engine 2: Micro-Remediation</p>
+            <p class="text-gray-500 text-[11px]">Sub-skill drills & adaptive question pruning</p>
+          </div>
+          <span class="font-mono text-[10px] bg-blue-50 text-blue-600 px-2 py-0.5 rounded">READY</span>
+        </div>
+        <div class="p-3 rounded-xl border border-gray-200 flex items-center justify-between">
+          <div>
+            <p class="font-medium text-gray-900">Engine 3: Live Scratchpad</p>
+            <p class="text-gray-500 text-[11px]">120Hz local ink + semantic snap triggers</p>
+          </div>
+          <span class="font-mono text-[10px] bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded">ACTIVE</span>
+        </div>
+      </div>
+
+      <!-- Live Event Stream -->
+      <div>
+        <p class="font-semibold text-gray-900 mb-2">Semantic Trigger Log</p>
+        <div id="telemetryFeed" class="space-y-2 font-mono text-[11px]">
+          <div class="p-2.5 rounded-xl bg-gray-50 border border-gray-200/80 text-gray-600">
+            <span class="text-blue-600 font-semibold">[INIT]</span> Orchestrator loaded 55m session for Aarav (0 live video tokens).
+          </div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <script>
+    // =========================================================
+    // STATE MANAGEMENT
+    // =========================================================
+    let currentView = 'student';
+    let currentStage = 0;
+    let triggerCount = 1;
+    let micActive = false;
+    let drillState = { 1: false, 2: false };
+
+    const tools = {
+      canvasStage1: { color: '#111827', size: 2.2, drawing: false, ctx: null },
+      canvasStage2: { color: '#111827', size: 2.2, drawing: false, ctx: null },
+    };
+
+    function recordTelemetry(tag, msg, countApi = false) {
+      if (countApi) {
+        triggerCount++;
+        document.getElementById('telTriggerCount').textContent = `${triggerCount} calls`;
+      }
+      const feed = document.getElementById('telemetryFeed');
+      const row = document.createElement('div');
+      row.className = 'p-2.5 rounded-xl bg-gray-50 border border-gray-200/80 text-gray-600';
+      row.innerHTML = `<span class="text-blue-600 font-semibold">[${tag}]</span> ${msg}`;
+      feed.prepend(row);
+    }
+
+    // =========================================================
+    // NAVIGATION & DRAWERS
+    // =========================================================
+    function switchView(view) {
+      currentView = view;
+      const studentSurface = document.getElementById('studentSurface');
+      const hodSurface = document.getElementById('hodSurface');
+      const stepNav = document.getElementById('studentStepNav');
+      const tabStudent = document.getElementById('tabStudent');
+      const tabHOD = document.getElementById('tabHOD');
+
+      if (view === 'student') {
+        studentSurface.classList.remove('hidden');
+        hodSurface.classList.add('hidden');
+        stepNav.classList.remove('invisible');
+        tabStudent.className = 'px-2.5 py-1 rounded-full bg-white text-gray-900 shadow-xs transition';
+        tabHOD.className = 'px-2.5 py-1 rounded-full text-gray-500 hover:text-gray-900 transition';
+        resizeCanvases();
+      } else {
+        studentSurface.classList.add('hidden');
+        hodSurface.classList.remove('hidden');
+        stepNav.classList.add('invisible');
+        tabHOD.className = 'px-2.5 py-1 rounded-full bg-white text-gray-900 shadow-xs transition';
+        tabStudent.className = 'px-2.5 py-1 rounded-full text-gray-500 hover:text-gray-900 transition';
+        recordTelemetry('HOD', 'Viewed Batch 10A nightly sub-skill heatmap.');
+      }
+    }
+
+    function toggleMobileView() {
+      switchView(currentView === 'student' ? 'hod' : 'student');
+    }
+
+    function goToStage(stage) {
+      currentStage = stage;
+      [0, 1, 2].forEach((i) => {
+        const sec = document.getElementById(`stage${i}`);
+        const pill = document.getElementById(`stepPill${i}`);
+        if (i === stage) {
+          sec.classList.remove('hidden');
+          pill.className = 'px-3 py-1 rounded-full bg-white text-gray-900 shadow-xs transition';
+        } else {
+          sec.classList.add('hidden');
+          pill.className = 'px-3 py-1 rounded-full text-gray-500 hover:text-gray-900 transition';
+        }
+      });
+      if (stage === 1) recordTelemetry('FLOW', 'Entered Concept Micro-Checkpoint.');
+      if (stage === 2) recordTelemetry('CANVAS', 'Opened Live Scratchpad for Q3.');
+      setTimeout(resizeCanvases, 25);
+    }
+
+    function toggleTelemetryDrawer() {
+      const drawer = document.getElementById('telemetryDrawer');
+      const backdrop = document.getElementById('telemetryBackdrop');
+      const isClosed = drawer.classList.contains('translate-x-full');
+      if (isClosed) {
+        backdrop.classList.remove('hidden');
+        drawer.classList.remove('translate-x-full', 'opacity-0', 'pointer-events-none');
+      } else {
+        backdrop.classList.add('hidden');
+        drawer.classList.add('translate-x-full', 'opacity-0', 'pointer-events-none');
+      }
+    }
+
+    // =========================================================
+    // SMOOTH STYLUS / TOUCH CANVAS ENGINE
+    // =========================================================
+    function bindCanvas(id) {
+      const canvas = document.getElementById(id);
+      const ctx = canvas.getContext('2d');
+      tools[id].ctx = ctx;
+
+      const coords = (e) => {
+        const r = canvas.getBoundingClientRect();
+        const cx = e.touches ? e.touches[0].clientX : e.clientX;
+        const cy = e.touches ? e.touches[0].clientY : e.clientY;
+        return { x: cx - r.left, y: cy - r.top };
+      };
+
+      const down = (e) => {
+        e.preventDefault();
+        tools[id].drawing = true;
+        const p = coords(e);
+        ctx.beginPath();
+        ctx.moveTo(p.x, p.y);
+      };
+
+      const move = (e) => {
+        if (!tools[id].drawing) return;
+        e.preventDefault();
+        const p = coords(e);
+        ctx.strokeStyle = tools[id].color;
+        ctx.lineWidth = tools[id].size;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.lineTo(p.x, p.y);
+        ctx.stroke();
+      };
+
+      const up = () => {
+        tools[id].drawing = false;
+      };
+
+      canvas.addEventListener('mousedown', down);
+      canvas.addEventListener('mousemove', move);
+      window.addEventListener('mouseup', up);
+      canvas.addEventListener('touchstart', down, { passive: false });
+      canvas.addEventListener('touchmove', move, { passive: false });
+      window.addEventListener('touchend', up);
+    }
+
+    function resizeCanvases() {
+      ['canvasStage1', 'canvasStage2'].forEach((id) => {
+        const c = document.getElementById(id);
+        if (!c || c.offsetParent === null) return;
+        c.width = c.parentElement.clientWidth;
+        c.height = c.parentElement.clientHeight;
+      });
+    }
+
+    function setTool(id, color, size) {
+      tools[id].color = color;
+      tools[id].size = size;
+    }
+
+    function clearCanvas(id) {
+      const c = document.getElementById(id);
+      const ctx = tools[id].ctx;
+      if (ctx) ctx.clearRect(0, 0, c.width, c.height);
+    }
+
+    // =========================================================
+    // VIEW 2: CONCEPT FLOW MICRO-CHECKPOINT INTERACTION
+    // =========================================================
+    function clearStage1() {
+      clearCanvas('canvasStage1');
+      document.getElementById('stage1Toast').classList.add('hidden');
+    }
+
+    function simulateConceptSketch(type) {
+      const c = document.getElementById('canvasStage1');
+      const ctx = tools['canvasStage1'].ctx;
+      clearCanvas('canvasStage1');
+
+      const ox = Math.max(70, c.width * 0.28);
+      const oy = c.height * 0.62;
+      const w = Math.min(260, c.width * 0.44);
+
+      // Draw clean axes
+      ctx.strokeStyle = '#6B7280';
+      ctx.lineWidth = 1.8;
+      ctx.beginPath();
+      ctx.moveTo(ox, oy - 95);
+      ctx.lineTo(ox, oy);
+      ctx.lineTo(ox + w, oy);
+      ctx.stroke();
+
+      ctx.font = '600 18px Caveat, cursive';
+      ctx.fillStyle = '#374151';
+      ctx.fillText('vx', ox - 24, oy - 85);
+      ctx.fillText('t', ox + w + 8, oy + 5);
+
+      const toast = document.getElementById('stage1Toast');
+      toast.classList.remove('hidden');
+
+      if (type === 'error') {
+        // Student mistakenly draws downward sloping line
+        ctx.strokeStyle = '#D97706';
+        ctx.lineWidth = 2.8;
+        ctx.beginPath();
+        ctx.moveTo(ox, oy - 75);
+        ctx.lineTo(ox + w - 20, oy - 10);
+        ctx.stroke();
+
+        toast.className = 'absolute top-4 left-1/2 -translate-x-1/2 w-[92%] max-w-lg bg-white rounded-2xl border border-amber-300 p-4 shadow-lg z-20';
+        toast.innerHTML = `
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <p class="text-xs font-semibold text-amber-800">Socratic Check • Horizontal Axis</p>
+              <p class="text-xs text-gray-700 mt-1">A downward slope means <b>vₓ</b> is decreasing. Does gravity pull horizontally or vertically?</p>
+            </div>
+            <button onclick="simulateConceptSketch('correct')" class="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-medium shrink-0">
+              Try Flat Line →
+            </button>
+          </div>
+        `;
+        recordTelemetry('CHECKPOINT', 'Detected sloping vx(t) sketch; nudged student on ax = 0.', true);
+      } else {
+        // Student draws flat horizontal constant line
+        ctx.strokeStyle = '#10B981';
+        ctx.lineWidth = 2.8;
+        ctx.beginPath();
+        ctx.moveTo(ox, oy - 55);
+        ctx.lineTo(ox + w - 20, oy - 55);
+        ctx.stroke();
+
+        ctx.fillStyle = '#059669';
+        ctx.fillText('vx = u cosθ (constant)', ox + 35, oy - 65);
+
+        toast.className = 'absolute top-4 left-1/2 -translate-x-1/2 w-[92%] max-w-lg bg-white rounded-2xl border border-emerald-300 p-4 shadow-lg z-20';
+        toast.innerHTML = `
+          <div class="flex items-center justify-between gap-3">
+            <div>
+              <p class="text-xs font-semibold text-emerald-700">Checkpoint Passed ✓</p>
+              <p class="text-xs text-gray-700 mt-0.5">Exactly right—constant horizontal velocity gives a flat line.</p>
+            </div>
+            <button onclick="goToStage(2)" class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium shrink-0">
+              Continue to Practice →
+            </button>
+          </div>
+        `;
+        recordTelemetry('CHECKPOINT', 'Concept micro-checkpoint verified. Advancing to Live Scratchpad.', true);
+      }
+    }
+
+    // =========================================================
+    // VIEW 3: LIVE SCRATCHPAD SCENARIOS & MICRO-DRILL
+    // =========================================================
+    function selectStylusMode(mode) {
+      const pen = document.getElementById('btnPen');
+      const eraser = document.getElementById('btnEraser');
+      if (mode === 'pen') {
+        setTool('canvasStage2', '#111827', 2.2);
+        pen.className = 'w-8 h-8 rounded-full bg-gray-900 text-white flex items-center justify-center transition';
+        eraser.className = 'w-8 h-8 rounded-full hover:bg-gray-100 text-gray-600 flex items-center justify-center transition';
+      } else {
+        setTool('canvasStage2', '#FAF9F6', 20);
+        eraser.className = 'w-8 h-8 rounded-full bg-gray-900 text-white flex items-center justify-center transition';
+        pen.className = 'w-8 h-8 rounded-full hover:bg-gray-100 text-gray-600 flex items-center justify-center transition';
+      }
+    }
+
+    function toggleMic() {
+      micActive = !micActive;
+      const btn = document.getElementById('btnMic');
+      const wave = document.getElementById('micWave');
+      if (micActive) {
+        btn.className = 'px-3 py-1.5 rounded-full bg-blue-50 border border-blue-200 text-blue-700 font-medium flex items-center gap-2 transition';
+        wave.classList.remove('voice-idle');
+        recordTelemetry('VAD MIC', 'Think-aloud voice activity detection armed.');
+      } else {
+        btn.className = 'px-3 py-1.5 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium flex items-center gap-2 transition';
+        wave.classList.add('voice-idle');
+      }
+    }
+
+    function toggleDemoPopover() {
+      document.getElementById('demoPopover').classList.toggle('hidden');
+    }
+
+    function hideBubble() {
+      document.getElementById('socraticBubble').classList.add('hidden');
+    }
+
+    function resetStage2() {
+      clearCanvas('canvasStage2');
+      hideBubble();
+      closeMicroDrill();
+      document.getElementById('problemTag').textContent = 'Q3 • Apex DPP-07';
+      document.getElementById('problemTag').className = 'font-mono text-xs font-semibold text-blue-600 bg-blue-50 border border-blue-100 px-2.5 py-0.5 rounded-md shrink-0';
+      document.getElementById('problemStatement').innerHTML = `
+        A particle's vertical velocity is <span class="font-mono text-sm bg-gray-100 px-1.5 py-0.5 rounded">vᵧ(t) = 20 − 10t</span>. Find displacement <span class="font-mono text-sm bg-gray-100 px-1.5 py-0.5 rounded">Δy</span> from <span class="font-mono text-sm bg-gray-100 px-1.5 py-0.5 rounded">t = 0</span> to <span class="font-mono text-sm bg-gray-100 px-1.5 py-0.5 rounded">t = 3 s</span>.
+      `;
+      document.getElementById('skillBadge').textContent = 'Sub-skill: Kinematics Integration';
+      document.getElementById('skillBadge').className = 'text-xs font-mono text-gray-400 shrink-0';
+    }
+
+    function renderDerivationLines(lines) {
+      const c = document.getElementById('canvasStage2');
+      const ctx = tools['canvasStage2'].ctx;
+      clearCanvas('canvasStage2');
+
+      lines.forEach((line, idx) => {
+        setTimeout(() => {
+          if (line.amberHighlight) {
+            ctx.fillStyle = 'rgba(245, 158, 11, 0.14)';
+            ctx.fillRect(32, line.y - 24, Math.min(c.width - 64, 430), 34);
+            ctx.strokeStyle = '#F59E0B';
+            ctx.lineWidth = 1.2;
+            ctx.strokeRect(32, line.y - 24, Math.min(c.width - 64, 430), 34);
+          }
+
+          ctx.font = '700 24px Caveat, cursive';
+          ctx.fillStyle = line.color || '#111827';
+          ctx.fillText(line.text, 44, line.y);
+
+          if (line.check) {
+            ctx.font = '600 13px Inter, sans-serif';
+            ctx.fillStyle = '#10B981';
+            ctx.fillText('✓', 44 + ctx.measureText(line.text).width + 14, line.y - 2);
+          }
+        }, idx * 380);
+      });
+    }
+
+    function triggerScenario(scenario) {
+      document.getElementById('demoPopover').classList.add('hidden');
+      hideBubble();
+      closeMicroDrill();
+
+      if (scenario === 'error') {
+        renderDerivationLines([
+          { text: 'Line 1:  dy / dt = vy(t) = 20 - 10t', y: 54, check: true },
+          { text: 'Line 2:  Δy = ∫₀³ (20 - 10t) dt', y: 98, check: true },
+          { text: 'Line 3:  Δy = [ 20t - 10t² ]₀³ = 60 - 90 = -30 m', y: 144, color: '#B45309', amberHighlight: true },
+        ]);
+
+        setTimeout(() => {
+          const bubble = document.getElementById('socraticBubble');
+          bubble.classList.remove('hidden');
+          bubble.className = 'absolute top-44 left-6 sm:left-12 right-6 sm:right-auto sm:max-w-md bg-white rounded-2xl border border-amber-300 p-4 shadow-lg z-20';
+          document.getElementById('bubbleDot').className = 'w-2.5 h-2.5 rounded-full bg-amber-500';
+          document.getElementById('bubbleLabel').className = 'text-xs font-semibold text-amber-800';
+          document.getElementById('bubbleLabel').textContent = 'Step-3 Sub-Skill Check';
+          document.getElementById('bubbleText').innerHTML = `Your kinematics setup is spot-on. Look closely at the power rule on <b>Line 3</b> when integrating <span class="font-mono text-xs bg-amber-50 px-1 py-0.5 rounded">10t dt</span>.`;
+          document.getElementById('bubbleCTA').innerHTML = `
+            <button onclick="openMicroDrill()" class="px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-medium transition flex items-center gap-1.5">
+              <span>Open 2-Min Integration Micro-Drill</span>
+              <span>→</span>
+            </button>
+          `;
+          recordTelemetry('ENGINE-3', 'Lines 1–2 verified (Kinematics OK). Isolated ∫10t dt denominator slip on Line 3.', true);
+        }, 1250);
+      }
+
+      if (scenario === 'mastery') {
+        renderDerivationLines([
+          { text: 'Line 1:  Δy = ∫₀³ (20 - 10t) dt', y: 54, check: true },
+          { text: 'Line 2:  Δy = [ 20t - 10t² / 2 ]₀³ = [ 20t - 5t² ]₀³', y: 98, check: true },
+          { text: 'Line 3:  Δy = 20(3) - 5(9) = 60 - 45 = +15 m', y: 144, color: '#059669', check: true },
+        ]);
+
+        setTimeout(() => {
+          document.getElementById('skillBadge').textContent = 'Kinematics Integration • MASTERED';
+          document.getElementById('skillBadge').className = 'text-xs font-mono font-semibold text-emerald-600 shrink-0';
+
+          const bubble = document.getElementById('socraticBubble');
+          bubble.classList.remove('hidden');
+          bubble.className = 'absolute top-44 left-6 sm:left-12 right-6 sm:right-auto sm:max-w-md bg-white rounded-2xl border border-emerald-300 p-4 shadow-lg z-20';
+          document.getElementById('bubbleDot').className = 'w-2.5 h-2.5 rounded-full bg-emerald-500';
+          document.getElementById('bubbleLabel').className = 'text-xs font-semibold text-emerald-700';
+          document.getElementById('bubbleLabel').textContent = 'Mastery Proven • Adaptive Pruning';
+          document.getElementById('bubbleText').innerHTML = `Clean 3-line solution! <b>Kinematics Integration</b> marked <span class="text-emerald-600 font-semibold">MASTERED</span> — 2 redundant questions (Q4 & Q5) skipped, jumping to Q6.`;
+          document.getElementById('bubbleCTA').innerHTML = `
+            <button onclick="jumpToQ6()" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium transition">
+              Jump to Q6 →
+            </button>
+          `;
+          recordTelemetry('ENGINE-2', 'Mastery confirmed. Auto-pruned Q4 & Q5 from DPP-07.', true);
+        }, 1250);
+      }
+
+      if (scenario === 'voice') {
+        if (!micActive) toggleMic();
+        renderDerivationLines([
+          { text: 'Line 1:  vy(t) = 20 - 10t', y: 54, check: true },
+          { text: 'Student (Think-Aloud): "Wait, shouldn’t g be negative here?"', y: 98, color: '#2563EB' },
+        ]);
+
+        setTimeout(() => {
+          const bubble = document.getElementById('socraticBubble');
+          bubble.classList.remove('hidden');
+          bubble.className = 'absolute top-40 left-6 sm:left-12 right-6 sm:right-auto sm:max-w-md bg-white rounded-2xl border border-blue-200 p-4 shadow-lg z-20';
+          document.getElementById('bubbleDot').className = 'w-2.5 h-2.5 rounded-full bg-blue-600';
+          document.getElementById('bubbleLabel').className = 'text-xs font-semibold text-blue-700';
+          document.getElementById('bubbleLabel').textContent = 'Voice Response • 165ms';
+          document.getElementById('bubbleText').innerHTML = `"Good catch—notice the <span class="font-mono text-xs bg-blue-50 px-1 py-0.5 rounded">-10t</span> term inside <span class="font-mono text-xs bg-blue-50 px-1 py-0.5 rounded">vᵧ(t)</span> already includes <span class="font-mono text-xs bg-blue-50 px-1 py-0.5 rounded">-gt</span>! So you can integrate <span class="font-mono text-xs bg-blue-50 px-1 py-0.5 rounded">vᵧ(t)</span> directly."`;
+          document.getElementById('bubbleCTA').innerHTML = `
+            <button onclick="triggerScenario('error')" class="px-3 py-1.5 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-medium">
+              Continue Solving Line 3 →
+            </button>
+          `;
+          recordTelemetry('VOICE VAD', 'Barge-in voice nudge delivered in 165ms.', true);
+        }, 800);
+      }
+    }
+
+    function jumpToQ6() {
+      hideBubble();
+      clearCanvas('canvasStage2');
+      document.getElementById('problemTag').textContent = 'Q6 • Apex DPP-07 (Q4–Q5 Skipped)';
+      document.getElementById('problemTag').className = 'font-mono text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-md shrink-0';
+      document.getElementById('problemStatement').innerHTML = `
+        A projectile is launched at <span class="font-mono text-sm bg-gray-100 px-1.5 py-0.5 rounded">45°</span> with speed <span class="font-mono text-sm bg-gray-100 px-1.5 py-0.5 rounded">20√2 m/s</span>. Find the time when its velocity makes <span class="font-mono text-sm bg-gray-100 px-1.5 py-0.5 rounded">30°</span> with the horizontal.
+      `;
+    }
+
+    // =========================================================
+    // 2-MIN INTEGRATION MICRO-DRILL DRAWER
+    // =========================================================
+    function openMicroDrill() {
+      drillState = { 1: false, 2: false };
+      document.getElementById('repMsg1').classList.add('hidden');
+      document.getElementById('repMsg2').classList.add('hidden');
+      const btn = document.getElementById('btnFinishDrill');
+      btn.disabled = true;
+      btn.className = 'w-full py-3 rounded-2xl bg-gray-100 text-gray-400 font-medium text-sm transition';
+      btn.textContent = 'Complete Both Reps to Resume Q3';
+
+      const panel = document.getElementById('microDrillPanel');
+      panel.classList.remove('translate-x-full', 'opacity-0', 'pointer-events-none');
+      recordTelemetry('CACHE HIT', 'Opened cached 2-Min Power-Rule drill (0 generation tokens).');
+    }
+
+    function closeMicroDrill() {
+      const panel = document.getElementById('microDrillPanel');
+      panel.classList.add('translate-x-full', 'opacity-0', 'pointer-events-none');
+    }
+
+    function checkDrillRep(num, correct, btnEl) {
+      const msg = document.getElementById(`repMsg${num}`);
+      msg.classList.remove('hidden');
+      if (correct) {
+        drillState[num] = true;
+        btnEl.className = 'py-2 rounded-xl bg-emerald-600 text-white font-semibold';
+        msg.className = 'text-[11px] mt-2 text-emerald-700 font-medium';
+        msg.textContent = num === 1 ? '✓ Correct: [10t² / 2]₀³ = 5(9) = 45.' : '✓ Correct: [6t² / 2]₀² = 3(4) = 12.';
+      } else {
+        btnEl.className = 'py-2 rounded-xl bg-amber-50 border border-amber-300 text-amber-800 font-medium';
+        msg.className = 'text-[11px] mt-2 text-amber-700 font-medium';
+        msg.textContent = 'Remember to divide by the new exponent 2!';
+      }
+
+      if (drillState[1] && drillState[2]) {
+        const doneBtn = document.getElementById('btnFinishDrill');
+        doneBtn.disabled = false;
+        doneBtn.className = 'w-full py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm shadow-xs transition cursor-pointer';
+        doneBtn.textContent = 'Sub-Skill Repaired • Return to Q3 →';
+      }
+    }
+
+    function finishMicroDrill() {
+      closeMicroDrill();
+      hideBubble();
+      document.getElementById('skillBadge').textContent = 'Power Rule Repaired ✓';
+      document.getElementById('skillBadge').className = 'text-xs font-mono font-semibold text-emerald-600 shrink-0';
+
+      renderDerivationLines([
+        { text: 'Line 1:  dy / dt = vy(t) = 20 - 10t', y: 54, check: true },
+        { text: 'Line 2:  Δy = ∫₀³ (20 - 10t) dt', y: 98, check: true },
+        { text: 'Line 3:  Δy = [ 20t - 10t² / 2 ]₀³ = 60 - 45 = +15 m', y: 144, color: '#059669', check: true },
+      ]);
+      recordTelemetry('REPAIRED', 'Student fixed Line 3 denominator and completed Q3 cleanly.');
+    }
+
+    // =========================================================
+    // HOD CLASS RECAP ACTION
+    // =========================================================
+    function triggerClassRecap() {
+      document.getElementById('recapToast').classList.remove('hidden');
+      const btn = document.getElementById('btnGenerateRecap');
+      btn.innerHTML = '<i class="fa-solid fa-check"></i><span>Recap Sent to 84 Tablets</span>';
+      btn.className = 'px-4 py-2.5 rounded-xl bg-emerald-600 text-white font-medium text-xs sm:text-sm shadow-xs flex items-center gap-2';
+      recordTelemetry('HOD ACTION', 'Broadcasted 10-Min Integration Recap to Batch 10A.');
+    }
+
+    // =========================================================
+    // BOOTSTRAP
+    // =========================================================
+    window.addEventListener('load', () => {
+      bindCanvas('canvasStage1');
+      bindCanvas('canvasStage2');
+      resizeCanvases();
+    });
+    window.addEventListener('resize', resizeCanvases);
+  </script>
+</body>
+</html>
